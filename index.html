@@ -13,11 +13,7 @@
   --btn:#2563eb;
   --btn-text:#fff;
   --border:#ddd;
-
-  --rowA:#ffffff;
-  --rowB:#f0f4ff;
 }
-
 [data-theme="dark"] {
   --bg:#0f172a;
   --text:#e5e7eb;
@@ -25,9 +21,6 @@
   --btn:#38bdf8;
   --btn-text:#020617;
   --border:#1e293b;
-
-  --rowA:#020617;
-  --rowB:#0b1224;
 }
 
 body {
@@ -38,7 +31,7 @@ body {
 }
 
 .container {
-  max-width:1400px;
+  max-width:1200px;
   margin:auto;
   padding:20px;
 }
@@ -85,10 +78,18 @@ button {
   flex:1 1 220px;
 }
 
+.domain {
+  margin-top:25px;
+}
+
+.domain h3 {
+  margin:0 0 10px 0;
+  font-size:16px;
+}
+
 table {
   width:100%;
   border-collapse:collapse;
-  margin-top:15px;
   font-size:13px;
 }
 
@@ -102,18 +103,11 @@ th {
   background:rgba(0,0,0,.05);
 }
 
-.domain-a td {
-  background:var(--rowA);
-}
-
-.domain-b td {
-  background:var(--rowB);
-}
-
 .preview {
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:15px;
+  margin-top:10px;
 }
 
 .preview h4 {
@@ -167,20 +161,7 @@ pre {
 <div class="status" id="status"></div>
 </div>
 
-<div class="card">
-<table>
-<thead>
-<tr>
-  <th>URL</th>
-  <th>Title</th>
-  <th>Description</th>
-  <th>Canonical</th>
-  <th>AMP</th>
-</tr>
-</thead>
-<tbody id="results"></tbody>
-</table>
-</div>
+<div id="results"></div>
 
 </div>
 
@@ -201,12 +182,13 @@ function cssCheckAll(){openWithDelay(getUrls(),u=>`https://jigsaw.w3.org/css-val
 
 async function runSEO() {
   const urls = getUrls();
-  const tbody = document.getElementById("results");
+  const container = document.getElementById("results");
   const status = document.getElementById("status");
-  tbody.innerHTML = "";
+  container.innerHTML = "";
 
   for (let i=0;i<urls.length;i++) {
     status.textContent = `Processing ${i+1}/${urls.length}`;
+
     const res = await fetch("/.netlify/functions/seo", {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
@@ -214,31 +196,36 @@ async function runSEO() {
     });
     const d = await res.json();
 
-    const rowClass = i % 2 === 0 ? "domain-a" : "domain-b";
+    container.innerHTML += `
+<div class="domain">
+  <h3>${d.url}</h3>
 
-    tbody.innerHTML += `
-<tr class="${rowClass}">
-  <td>${d.url}</td>
-  <td>${esc(d.title)}</td>
-  <td>${esc(d.description)}</td>
-  <td>${d.canonical || "-"}</td>
-  <td>${d.amphtml || "-"}</td>
-</tr>
+  <table>
+    <tr>
+      <th>Title</th>
+      <th>Description</th>
+      <th>Canonical</th>
+      <th>AMP HTML</th>
+    </tr>
+    <tr>
+      <td>${esc(d.title)}</td>
+      <td>${esc(d.description)}</td>
+      <td>${d.canonical || "-"}</td>
+      <td>${d.amphtml || "-"}</td>
+    </tr>
+  </table>
 
-<tr class="${rowClass}">
-  <td colspan="5">
-    <div class="preview">
-      <div>
-        <h4>Robots.txt (Status: ${d.robots.status || "N/A"})</h4>
-        <pre>${esc(d.robots.content || "")}</pre>
-      </div>
-      <div>
-        <h4>Sitemap.xml (Status: ${d.sitemap.status || "N/A"})</h4>
-        <pre>${esc(d.sitemap.content || "")}</pre>
-      </div>
+  <div class="preview">
+    <div>
+      <h4>Robots.txt (Status: ${d.robots.status || "N/A"})</h4>
+      <pre>${esc(d.robots.content || "")}</pre>
     </div>
-  </td>
-</tr>`;
+    <div>
+      <h4>Sitemap.xml (Status: ${d.sitemap.status || "N/A"})</h4>
+      <pre>${esc(d.sitemap.content || "")}</pre>
+    </div>
+  </div>
+</div>`;
   }
 
   status.textContent = "Done.";
