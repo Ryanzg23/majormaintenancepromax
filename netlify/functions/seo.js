@@ -1,17 +1,34 @@
 export async function handler(event) {
   try {
-    const { url } = JSON.parse(event.body || "{}");
+    let { url } = JSON.parse(event.body || "{}");
 
     if (!url) {
       return json({ error: "URL is required" }, 400);
     }
 
-    const res = await fetch(url, {
-      redirect: "follow",
-      headers: {
-        "User-Agent": "SEO-Bulk-Checker/1.0"
-      }
-    });
+    // ✅ Normalize URL (VERY IMPORTANT)
+    if (!/^https?:\/\//i.test(url)) {
+      url = "https://" + url;
+    }
+
+    let res;
+    try {
+      res = await fetch(url, {
+        redirect: "follow",
+        headers: {
+          "User-Agent": "SEO-Bulk-Checker/1.0"
+        }
+      });
+    } catch {
+      // 🔁 Fallback to http if https fails
+      url = url.replace(/^https:\/\//i, "http://");
+      res = await fetch(url, {
+        redirect: "follow",
+        headers: {
+          "User-Agent": "SEO-Bulk-Checker/1.0"
+        }
+      });
+    }
 
     const html = await res.text();
 
