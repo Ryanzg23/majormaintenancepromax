@@ -129,15 +129,22 @@ table {
   font-size:13px;
 }
 
-th, td {
+thead th {
+  background:rgba(0,0,0,.05);
+  font-size:14px;
+  text-align:center;
+  vertical-align:middle;
+  padding:12px 8px;
+}
+
+td {
   border:1px solid var(--border);
   padding:10px;
   vertical-align:middle;
 }
 
 th {
-  background:rgba(0,0,0,.05);
-  font-size:14px;
+  border:1px solid var(--border);
 }
 
 /* PREVIEW */
@@ -172,7 +179,7 @@ pre {
 }
 
 /* ===================== */
-/* 📱 MOBILE OPTIMIZATION */
+/* 📱 MOBILE RESPONSIVE  */
 /* ===================== */
 @media (max-width: 768px) {
 
@@ -185,7 +192,6 @@ pre {
     flex:1 1 100%;
   }
 
-  /* Stack table into blocks */
   table, thead, tbody, tr {
     display:block;
   }
@@ -195,7 +201,6 @@ pre {
   }
 
   tr {
-    margin-bottom:10px;
     border:1px solid var(--border);
     border-radius:10px;
     overflow:hidden;
@@ -205,7 +210,6 @@ pre {
     display:flex;
     justify-content:space-between;
     gap:10px;
-    padding:10px;
     border:none;
     border-bottom:1px solid var(--border);
     font-size:13px;
@@ -223,10 +227,6 @@ pre {
 
   .preview {
     grid-template-columns:1fr;
-  }
-
-  h1 {
-    font-size:18px;
   }
 }
 </style>
@@ -295,12 +295,22 @@ async function runSEO() {
   <h3>${d.url}</h3>
 
   <table>
-    <tr>
-      <td data-label="Title">${esc(d.title)}</td>
-      <td data-label="Description">${esc(d.description)}</td>
-      <td data-label="Canonical">${d.canonical || "-"}</td>
-      <td data-label="AMP HTML">${d.amphtml || "-"}</td>
-    </tr>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Canonical</th>
+        <th>AMP HTML</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-label="Title">${esc(d.title)}</td>
+        <td data-label="Description">${esc(d.description)}</td>
+        <td data-label="Canonical">${d.canonical || "-"}</td>
+        <td data-label="AMP HTML">${d.amphtml || "-"}</td>
+      </tr>
+    </tbody>
   </table>
 
   <div class="preview">
