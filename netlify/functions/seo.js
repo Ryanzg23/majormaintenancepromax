@@ -3,10 +3,7 @@ export async function handler(event) {
     const { url } = JSON.parse(event.body || "{}");
 
     if (!url) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: "URL is required" })
-      };
+      return json({ error: "URL is required" }, 400);
     }
 
     const res = await fetch(url, {
@@ -18,37 +15,54 @@ export async function handler(event) {
 
     const html = await res.text();
 
+    const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+    const head = headMatch ? headMatch[1] : "";
+
     const extract = (regex) => {
-      const m = html.match(regex);
+      const m = head.match(regex);
       return m ? m[1].trim() : "";
     };
 
-    const title = extract(/<title[^>]*>(.*?)<\/title>/i);
-    const description = extract(
-      /<meta\s+name=["']description["']\s+content=["'](.*?)["']/i
-    );
-    const canonical = extract(
-      /<link\s+rel=["']canonical["']\s+href=["'](.*?)["']/i
-    );
-    const amphtml = extract(
-      /<link\s+rel=["']amphtml["']\s+href=["'](.*?)["']/i
-    );
+    const title =
+      extract(/<title[^>]*>([\s\S]*?)<\/title>/i);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        url,
-        title,
-        description,
-        canonical,
-        amphtml
-      })
-    };
+    const description =
+      extract(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']+)["']/i) ||
+      extract(/<meta[^>]+content=["']([^"']+)["'][^>]*name=["']description["']/i);
+
+    const canonical =
+      extract(/<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i);
+
+    const amphtml =
+      extract(/<link[^>]+rel=["']amphtml["'][^>]*href=["']([^"']+)["']/i);
+
+    return json({
+      url,
+      title: title || "",
+      description: description || "",
+      canonical: canonical || "",
+      amphtml: amphtml || ""
+    });
 
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message })
-    };
+    return json({
+      url: "",
+      title: "",
+      description: "",
+      canonical: "",
+      amphtml: "",
+      error: err.message
+    }, 500);
   }
+}
+
+function json(body, status = 200) {
+  return {
+    statusCode: status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    },
+    body: JSON.stringify(body)
+  };
 }
