@@ -177,25 +177,38 @@ async function runSEO() {
   const status = document.getElementById("status");
   tbody.innerHTML = "";
 
-  for (let i=0;i<urls.length;i++) {
-    status.textContent = `Processing ${i+1}/${urls.length}`;
-    const res = await fetch("/.netlify/functions/seo", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ url: urls[i] })
-    });
-    const d = await res.json();
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    status.textContent = `Processing ${i + 1} / ${urls.length}`;
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${d.url}</td>
-      <td>${escape(d.title)}</td>
-      <td>${escape(d.description)}</td>
-      <td>${d.canonical || "-"}</td>
-      <td>${d.amphtml || "-"}</td>
-    `;
-    tbody.appendChild(tr);
+    try {
+      const res = await fetch("/.netlify/functions/seo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
+
+      const d = await res.json();
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${url}</td>
+        <td>${escape(d.title)}</td>
+        <td>${escape(d.description)}</td>
+        <td>${d.canonical || "-"}</td>
+        <td>${d.amphtml || "-"}</td>
+      `;
+      tbody.appendChild(tr);
+
+    } catch (e) {
+      tbody.innerHTML += `
+        <tr>
+          <td>${url}</td>
+          <td colspan="4">ERROR</td>
+        </tr>`;
+    }
   }
+
   status.textContent = "Done.";
 }
 
@@ -214,3 +227,4 @@ function toggleTheme() {
 
 </body>
 </html>
+
