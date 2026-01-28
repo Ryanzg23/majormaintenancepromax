@@ -192,7 +192,7 @@ async function runSEO() {
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${url}</td>
+        <td>${d.url || url}</td>
         <td>${escape(d.title)}</td>
         <td>${escape(d.description)}</td>
         <td>${d.canonical || "-"}</td>
@@ -203,7 +203,7 @@ async function runSEO() {
     } catch (e) {
       tbody.innerHTML += `
         <tr>
-          <td>${url}</td>
+          <td>${d.url || url}</td>
           <td colspan="4">ERROR</td>
         </tr>`;
     }
@@ -227,4 +227,5 @@ function toggleTheme() {
 
 </body>
 </html>
+
 
