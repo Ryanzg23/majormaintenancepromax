@@ -13,7 +13,11 @@
   --btn:#2563eb;
   --btn-text:#fff;
   --border:#ddd;
+
+  --rowA:#ffffff;
+  --rowB:#f0f4ff;
 }
+
 [data-theme="dark"] {
   --bg:#0f172a;
   --text:#e5e7eb;
@@ -21,6 +25,9 @@
   --btn:#38bdf8;
   --btn-text:#020617;
   --border:#1e293b;
+
+  --rowA:#020617;
+  --rowB:#0b1224;
 }
 
 body {
@@ -95,8 +102,12 @@ th {
   background:rgba(0,0,0,.05);
 }
 
-.subrow {
-  background:rgba(0,0,0,.03);
+.domain-a td {
+  background:var(--rowA);
+}
+
+.domain-b td {
+  background:var(--rowB);
 }
 
 .preview {
@@ -196,7 +207,6 @@ async function runSEO() {
 
   for (let i=0;i<urls.length;i++) {
     status.textContent = `Processing ${i+1}/${urls.length}`;
-
     const res = await fetch("/.netlify/functions/seo", {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
@@ -204,8 +214,10 @@ async function runSEO() {
     });
     const d = await res.json();
 
+    const rowClass = i % 2 === 0 ? "domain-a" : "domain-b";
+
     tbody.innerHTML += `
-<tr>
+<tr class="${rowClass}">
   <td>${d.url}</td>
   <td>${esc(d.title)}</td>
   <td>${esc(d.description)}</td>
@@ -213,7 +225,7 @@ async function runSEO() {
   <td>${d.amphtml || "-"}</td>
 </tr>
 
-<tr class="subrow">
+<tr class="${rowClass}">
   <td colspan="5">
     <div class="preview">
       <div>
