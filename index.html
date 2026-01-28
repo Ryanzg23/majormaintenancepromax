@@ -3,24 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SEO Bulk Checker</title>
+<title>MAJOR MAINTENANCE PRO MAX</title>
 
 <style>
 :root {
   --bg:#f5f5f5;
   --text:#111;
-  --card:#fff;
+  --card:#ffffff;
   --btn:#2563eb;
-  --btn-text:#fff;
+  --btn-text:#ffffff;
   --border:#ddd;
+
+  --code-bg:#0f172a;
+  --code-text:#e5e7eb;
 }
+
 [data-theme="dark"] {
-  --bg:#0f172a;
+  --bg:#0b1020;
   --text:#e5e7eb;
   --card:#020617;
   --btn:#38bdf8;
   --btn-text:#020617;
   --border:#1e293b;
+
+  --code-bg:#020617;
+  --code-text:#e5e7eb;
 }
 
 body {
@@ -42,6 +49,11 @@ header {
   align-items:center;
 }
 
+h1 {
+  margin:0;
+  font-size:20px;
+}
+
 textarea {
   width:100%;
   height:160px;
@@ -51,19 +63,22 @@ textarea {
 }
 
 button {
-  padding:10px;
+  padding:10px 14px;
   border:none;
   border-radius:8px;
   cursor:pointer;
   background:var(--btn);
   color:var(--btn-text);
   font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
 
 .card {
   background:var(--card);
   padding:15px;
-  border-radius:10px;
+  border-radius:12px;
   margin-top:15px;
 }
 
@@ -78,13 +93,19 @@ button {
   flex:1 1 220px;
 }
 
-.domain {
+/* DOMAIN BLOCK */
+.domain-card {
+  background:var(--card);
+  border-radius:14px;
+  padding:18px;
   margin-top:25px;
+  border:1px solid var(--border);
 }
 
-.domain h3 {
-  margin:0 0 10px 0;
+.domain-card h3 {
+  margin:0 0 12px 0;
   font-size:16px;
+  word-break:break-all;
 }
 
 table {
@@ -107,22 +128,24 @@ th {
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:15px;
-  margin-top:10px;
+  margin-top:15px;
 }
 
 .preview h4 {
-  margin:0 0 5px 0;
+  margin:0 0 6px 0;
   font-size:13px;
 }
 
+/* CODE BLOCK STYLE */
 pre {
-  white-space:pre-wrap;
-  max-height:220px;
+  background:var(--code-bg);
+  color:var(--code-text);
+  padding:12px;
+  border-radius:10px;
+  max-height:260px;
   overflow:auto;
   font-size:12px;
-  background:rgba(0,0,0,.05);
-  padding:8px;
-  border-radius:6px;
+  font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 .status {
@@ -143,8 +166,8 @@ pre {
 <div class="container">
 
 <header>
-  <h2>SEO Bulk Checker</h2>
-  <button onclick="toggleTheme()">🌙 Theme</button>
+  <h1>MAJOR MAINTENANCE PRO MAX</h1>
+  <button id="themeBtn" onclick="toggleTheme()">☀️ Light</button>
 </header>
 
 <div class="card">
@@ -197,7 +220,7 @@ async function runSEO() {
     const d = await res.json();
 
     container.innerHTML += `
-<div class="domain">
+<div class="domain-card">
   <h3>${d.url}</h3>
 
   <table>
@@ -236,9 +259,18 @@ const esc = t => (t||"").replace(/[&<>"']/g,m=>({
   '"':"&quot;","'":"&#039;"
 }[m]));
 
-const toggleTheme = () =>
-  document.body.dataset.theme =
-    document.body.dataset.theme === "light" ? "dark" : "light";
+function toggleTheme() {
+  const body = document.body;
+  const btn = document.getElementById("themeBtn");
+
+  if (body.dataset.theme === "light") {
+    body.dataset.theme = "dark";
+    btn.textContent = "🌙 Dark";
+  } else {
+    body.dataset.theme = "light";
+    btn.textContent = "☀️ Light";
+  }
+}
 </script>
 
 </body>
