@@ -44,7 +44,7 @@ body {
   padding:16px;
 }
 
-/* Report page width */
+/* Exported report width */
 .report-mode .container {
   max-width:1400px;
 }
@@ -205,38 +205,13 @@ th { background:rgba(0,0,0,.05); }
   opacity:.7;
 }
 
-/* REPORT */
-.report-toolbar {
-  margin-bottom:16px;
-}
-
-.report-grid {
-  display:flex;
-  flex-wrap:wrap;
-  gap:16px;
-}
-
-.report-grid .domain-card {
-  width:calc(50% - 8px);
-}
-
-/* Report-only: hide buttons */
+/* Export-only: hide buttons */
 .report-mode button,
 .report-mode a.btn {
   display:none !important;
 }
 
-.screenshot-helper {
-  font-size:14px;
-  background:#f1f5f9;
-  border-left:4px solid #2563eb;
-  padding:10px;
-  margin:10px 0 14px 0;
-  border-radius:6px;
-}
-
 @media (max-width:900px) {
-  .report-grid .domain-card { width:100%; }
   .preview { grid-template-columns:1fr; }
 }
 </style>
@@ -259,8 +234,9 @@ th { background:rgba(0,0,0,.05); }
   <button onclick="scanAll()">SCAN ALL</button>
   <button onclick="cssCheckAll()">CHECK ALL CSS</button>
   <button onclick="runSEO()">GENERATE META + ROBOTS</button>
-  <button id="reportBtn" onclick="openReport()" disabled>OPEN REPORT PAGE</button>
-  <button id="exportBtn" onclick="exportReportHTML()" disabled>EXPORT REPORT (HTML)</button>
+  <button id="exportBtn" onclick="exportReportHTML()" disabled>
+    EXPORT REPORT (HTML)
+  </button>
 </div>
 
 <div class="status" id="status"></div>
@@ -272,7 +248,8 @@ th { background:rgba(0,0,0,.05); }
 
 <script>
 const getUrls = () =>
-  document.getElementById("urls").value.split("\n").map(u=>u.trim()).filter(Boolean);
+  document.getElementById("urls").value
+    .split("\n").map(u=>u.trim()).filter(Boolean);
 
 const openWithDelay = (urls, builder, delay=700) =>
   urls.forEach((u,i)=>setTimeout(()=>window.open(builder(u),"_blank"),i*delay));
@@ -287,7 +264,6 @@ async function runSEO() {
   const results = document.getElementById("results");
   const status = document.getElementById("status");
 
-  document.getElementById("reportBtn").disabled = true;
   document.getElementById("exportBtn").disabled = true;
   results.innerHTML = "";
 
@@ -338,7 +314,6 @@ async function runSEO() {
   }
 
   status.textContent = "Done.";
-  document.getElementById("reportBtn").disabled = false;
   document.getElementById("exportBtn").disabled = false;
 }
 
@@ -348,57 +323,38 @@ function togglePreview(btn) {
   btn.textContent = preview.style.display === "none" ? "Show Preview" : "Hide Preview";
 }
 
-function openReport() {
-  openReportWindow(false);
-}
-
 function exportReportHTML() {
-  const html = openReportWindow(true);
-  const blob = new Blob([html], { type:"text/html" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `seo-report-${new Date().toISOString().split("T")[0]}.html`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-function openReportWindow(returnHTML) {
   const content = document.getElementById("results").innerHTML;
+  if (!content.trim()) {
+    alert("No report data to export.");
+    return;
+  }
 
   const html = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SEO Report</title>
 <link href="favicon.png" rel="shortcut icon" type="image/x-icon">
 ${document.querySelector("style").outerHTML}
 </head>
 <body class="report-mode" data-theme="${document.body.dataset.theme}">
 <div class="container">
-  <div class="report-toolbar">
-    <h2>SEO Report</h2>
-  </div>
-
-  <div class="screenshot-helper">
-    📸 <strong>Screenshot full page for report:</strong><br>
-    Open the site preview above in a new tab and use your screenshot extension
-    (GoFullPage, Nimbus, Awesome Screenshot).
-  </div>
-
-  <div class="report-grid">
-    ${content}
-  </div>
+  <h2>SEO Report</h2>
+  ${content}
 </div>
 </body>
 </html>
 `;
 
-  if (returnHTML) return html;
-
-  const win = window.open("", "_blank");
-  win.document.write(html);
-  win.document.close();
+  const blob = new Blob([html], { type:"text/html" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `seo-report-${new Date().toISOString().split("T")[0]}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 function toggleTheme() {
