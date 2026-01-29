@@ -1,225 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>MAJOR MAINTENANCE PRO MAX</title>
 <link href="favicon.png" rel="shortcut icon" type="image/x-icon">
 
 <style>
-* { box-sizing:border-box; }
-
-:root {
+:root{
   --bg:#f5f5f5;
+  --card:#fff;
   --text:#111;
-  --card:#ffffff;
   --btn:#2563eb;
-  --btn-text:#ffffff;
   --border:#ddd;
-  --code-bg:#0f172a;
-  --code-text:#e5e7eb;
+  --code:#0f172a;
+  --codeText:#e5e7eb;
 }
-
-[data-theme="dark"] {
-  --bg:#0b1020;
-  --text:#e5e7eb;
+[data-theme="dark"]{
+  --bg:#020617;
   --card:#020617;
+  --text:#e5e7eb;
   --btn:#38bdf8;
-  --btn-text:#020617;
   --border:#1e293b;
-  --code-bg:#020617;
-  --code-text:#e5e7eb;
+  --code:#020617;
 }
-
-body {
+*{box-sizing:border-box}
+body{
   margin:0;
   font-family:system-ui,sans-serif;
   background:var(--bg);
   color:var(--text);
 }
-
-.container {
-  max-width:1200px;
-  margin:auto;
-  padding:16px;
-}
-
-.report-mode .container {
-  max-width:1400px;
-}
-
-header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-h1 { margin:0; font-size:20px; }
-
-textarea {
+.container{max-width:1200px;margin:auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center}
+textarea{
   width:100%;
   min-height:160px;
   padding:12px;
   border-radius:8px;
   border:1px solid var(--border);
-  resize:vertical;
 }
-
-button, a.btn {
-  padding:10px 14px;
+button,a.btn{
+  background:var(--btn);
+  color:#fff;
   border:none;
   border-radius:8px;
-  cursor:pointer;
-  background:var(--btn);
-  color:var(--btn-text);
+  padding:10px 14px;
   font-weight:600;
-  font-size:13px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  transition:.15s;
+  cursor:pointer;
 }
-
-button:hover:not(:disabled),
-a.btn:hover {
-  transform:translateY(-1px);
-  box-shadow:0 6px 18px rgba(0,0,0,.2);
-}
-
-button:disabled {
-  opacity:.5;
-  cursor:not-allowed;
-}
-
-.card {
-  background:var(--card);
-  padding:15px;
-  border-radius:12px;
-  margin-top:15px;
-}
-
-.actions {
+.actions{
   display:flex;
-  flex-wrap:wrap;
   gap:10px;
+  flex-wrap:wrap;
   margin-top:10px;
 }
-
-.actions button { flex:1 1 220px; }
-
-#results { margin-top:28px; }
-
-.domain-card {
+.actions button{flex:1 1 200px}
+.card{
+  background:var(--card);
+  padding:16px;
+  border-radius:12px;
+}
+#results{margin-top:20px}
+.domain-card{
   background:var(--card);
   border:1px solid var(--border);
-  border-radius:14px;
+  border-radius:12px;
   padding:16px;
   margin-top:20px;
 }
-
-.domain-header {
+.domain-header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
 }
-
-.domain-header h3 {
-  margin:0;
-  font-size:16px;
-  word-break:break-all;
-}
-
-/* redirect-only block */
-.redirect-only {
-  text-align:center;
-  padding:30px 20px;
-}
-
-.redirect-status {
-  font-size:18px;
-  font-weight:700;
-  margin-bottom:10px;
-}
-
-.redirect-note {
-  font-size:13px;
-  opacity:.8;
-}
-
-.site-preview {
+.site-preview{
   position:relative;
   margin:12px 0;
 }
-
-.site-preview iframe {
+.site-preview iframe{
   width:100%;
   height:260px;
+  border-radius:8px;
   border:1px solid var(--border);
-  border-radius:10px;
 }
-
-.preview-label {
+.preview-label{
   position:absolute;
   top:8px;
   left:8px;
-  background:rgba(0,0,0,.75);
+  background:#000;
   color:#fff;
-  font-size:12px;
-  padding:5px 10px;
+  padding:4px 8px;
   border-radius:6px;
+  font-size:12px;
 }
-
-table {
+table{
   width:100%;
   border-collapse:collapse;
   font-size:12px;
-  margin-bottom:12px;
 }
-
-th, td {
+th,td{
   border:1px solid var(--border);
   padding:6px;
 }
-
-.preview {
+.preview{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:14px;
+  gap:12px;
+  margin-top:10px;
 }
-
-.code-block {
-  background:var(--code-bg);
-  color:var(--code-text);
+.code-block{
+  background:var(--code);
+  color:var(--codeText);
   padding:10px;
   border-radius:8px;
   font-size:11px;
   max-height:220px;
   overflow:auto;
-  white-space:pre-wrap;
 }
-
-/* REPORT */
-.report-grid {
-  display:flex;
-  flex-wrap:wrap;
-  gap:16px;
-}
-.report-grid .domain-card {
-  width:calc(50% - 8px);
-}
-.report-mode button,
-.report-mode a.btn {
-  display:none !important;
-}
-
-@media (max-width:900px) {
-  .preview { grid-template-columns:1fr; }
-  .report-grid .domain-card { width:100%; }
+@media(max-width:800px){
+  .preview{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -233,7 +133,7 @@ th, td {
 </header>
 
 <div class="card">
-<textarea id="urls" placeholder="One domain or URL per line"></textarea>
+<textarea id="urls" placeholder="One URL per line"></textarea>
 
 <div class="actions">
   <button onclick="ampTestAll()">AMP TEST ALL</button>
@@ -253,294 +153,86 @@ th, td {
 </div>
 
 <script>
-/* ---------- HELPERS ---------- */
-const getUrls = () =>
-  document.getElementById("urls").value
-    .split("\n")
-    .map(u => u.trim())
-    .filter(Boolean);
+const getUrls=()=>urls.value.split("\n").map(u=>u.trim()).filter(Boolean);
+const esc=s=>(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
 
-const openWithDelay = (urls, fn, delay = 700) =>
-  urls.forEach((u, i) =>
-    setTimeout(() => window.open(fn(u), "_blank"), i * delay)
-  );
+function ampTestAll(){getUrls().forEach(u=>window.open(`https://search.google.com/test/amp?url=${u}`))}
+function pageSpeedAll(){getUrls().forEach(u=>window.open(`https://pagespeed.web.dev/report?url=${u}`))}
+function scanAll(){getUrls().forEach(u=>window.open(`https://sitecheck.sucuri.net/results/${u}`))}
+function cssCheckAll(){getUrls().forEach(u=>window.open(`https://jigsaw.w3.org/css-validator/validator?uri=${u}`))}
 
-const esc = s =>
-  (s || "").replace(/[&<>"']/g, m => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[m]));
+async function runSEO(){
+  results.innerHTML="";
+  reportBtn.disabled=true;
+  exportBtn.disabled=true;
+  const urls=getUrls();
+  for(let i=0;i<urls.length;i++){
+    status.textContent=`Processing ${i+1}/${urls.length}`;
+    const res=await fetch("/.netlify/functions/seo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:urls[i]})});
+    const d=await res.json();
 
-/* ---------- BULK TOOLS ---------- */
-function ampTestAll() {
-  openWithDelay(getUrls(), u =>
-    `https://search.google.com/test/amp?url=${encodeURIComponent(u)}`
-  );
-}
-function pageSpeedAll() {
-  openWithDelay(getUrls(), u =>
-    `https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`
-  );
-}
-function scanAll() {
-  openWithDelay(getUrls(), u =>
-    `https://sitecheck.sucuri.net/results/${encodeURIComponent(u)}`
-  );
-}
-function cssCheckAll() {
-  openWithDelay(getUrls(), u =>
-    `https://jigsaw.w3.org/css-validator/validator?uri=${encodeURIComponent(u)}`
-  );
-}
-
-/* ---------- REDIRECT HELPERS ---------- */
-function normalizeDomain(url) {
-  if (!url || typeof url !== "string") return "";
-  return url
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .split("/")[0];
-}
-
-function isCrossDomainRedirect(chain, finalUrl, originalUrl) {
-  const base = normalizeDomain(originalUrl);
-  const finalD = normalizeDomain(finalUrl);
-  if (!base || !finalD) return false;
-  if (base !== finalD) return true;
-  if (Array.isArray(chain)) {
-    return chain.some(r => normalizeDomain(r.url) && normalizeDomain(r.url) !== base);
-  }
-  return false;
-}
-
-function formatRedirect(chain, finalUrl, originalUrl) {
-  if (!finalUrl) return "-";
-  const cross = isCrossDomainRedirect(chain, finalUrl, originalUrl);
-  if (!chain || chain.length === 0 || !cross) {
-    return `<strong>${finalUrl}</strong>`;
-  }
-  if (chain.length === 1) {
-    return `301 to <strong>${finalUrl}</strong>`;
-  }
-  return `301 to ${chain
-    .filter(r => r && r.url)
-    .slice(0, -1)
-    .map(r => r.url)
-    .join(" → ")} → <strong>${finalUrl}</strong>`;
-}
-
-/* ---------- MAIN ---------- */
-async function runSEO() {
-  const urls = getUrls();
-  const results = document.getElementById("results");
-  const status = document.getElementById("status");
-
-  results.innerHTML = "";
-  reportBtn.disabled = true;
-  exportBtn.disabled = true;
-
-  for (let i = 0; i < urls.length; i++) {
-    status.textContent = `Processing ${i + 1} / ${urls.length}`;
-
-    const res = await fetch("/.netlify/functions/seo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: urls[i] })
-    });
-
-    const d = await res.json();
-
-    const is404 =
-      d.finalStatus === 404 ||
-      /page not found|404|not exist/i.test(d.title || "");
-
-    const cross = isCrossDomainRedirect(
-      d.redirectChain,
-      d.finalUrl,
-      d.url
-    );
-
-    /* ---------- 404 PAGE ---------- */
-    if (is404) {
-      results.innerHTML += `
+    results.innerHTML+=`
 <div class="domain-card">
   <div class="domain-header">
-    <h3>${esc(d.url)}</h3>
-    <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
-  </div>
-
-  <div class="redirect-only">
-    <div class="redirect-status">⚠ Page Not Found (404)</div>
-    <div class="redirect-note">
-      This URL returns a 404 page, but the domain is reachable.
-    </div>
-    <div style="margin-top:8px;font-size:12px;">
-      Final URL: <strong>${esc(d.finalUrl)}</strong>
-    </div>
-  </div>
-
-  <div class="preview">
+    <strong>${esc(d.url)}</strong>
     <div>
-      <strong>Robots.txt</strong>
-      <div class="code-block">
-        ${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}
-      </div>
-    </div>
-    <div>
-      <strong>Sitemap.xml</strong>
-      <div class="code-block">
-        ${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}
-      </div>
-    </div>
-  </div>
-</div>`;
-      continue;
-    }
-
-    /* ---------- CROSS-DOMAIN 301 ---------- */
-    if (cross) {
-      results.innerHTML += `
-<div class="domain-card">
-  <div class="domain-header">
-    <h3>${esc(d.url)}</h3>
-    <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
-  </div>
-
-  <div class="redirect-only">
-    <div class="redirect-status">
-      ${formatRedirect(d.redirectChain, d.finalUrl, d.url)}
-    </div>
-    <div class="redirect-note">
-      This domain permanently redirects to another domain.
-    </div>
-  </div>
-</div>`;
-      continue;
-    }
-
-    /* ---------- NORMAL PAGE ---------- */
-    results.innerHTML += `
-<div class="domain-card">
-  <div class="domain-header">
-    <h3>${esc(d.url)}</h3>
-    <div>
-      <button onclick="togglePreview(this)">Show Preview</button>
+      <button onclick="togglePreview(this)">Hide Preview</button>
       <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
     </div>
   </div>
 
-  <div class="site-preview" style="display:none">
+  <div class="site-preview">
     <div class="preview-label">Site Preview</div>
-    <iframe data-src="${d.finalUrl}"></iframe>
+    <iframe src="${d.finalUrl}"></iframe>
   </div>
 
   <table>
     <tr><th>Title</th><td>${esc(d.title)}</td></tr>
     <tr><th>Description</th><td>${esc(d.description)}</td></tr>
-    <tr><th>Canonical</th><td>${d.canonical || "-"}</td></tr>
-    <tr><th>AMP</th><td>${d.amphtml || "-"}</td></tr>
-    <tr>
-      <th>Redirect / Final URL</th>
-      <td>${formatRedirect(d.redirectChain, d.finalUrl, d.url)}</td>
-    </tr>
+    <tr><th>Canonical</th><td>${d.canonical||"-"}</td></tr>
+    <tr><th>AMP</th><td>${d.amphtml||"-"}</td></tr>
   </table>
 
   <div class="preview">
     <div>
       <strong>Robots.txt</strong>
-      <div class="code-block">
-        ${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}
-      </div>
+      <div class="code-block">${d.robots?.found?esc(d.robots.content):"robots.txt not found"}</div>
     </div>
     <div>
       <strong>Sitemap.xml</strong>
-      <div class="code-block">
-        ${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}
-      </div>
+      <div class="code-block">${d.sitemap?.found?esc(d.sitemap.content):"sitemap.xml not found"}</div>
     </div>
   </div>
 </div>`;
   }
-
-  status.textContent = "Done.";
-  reportBtn.disabled = false;
-  exportBtn.disabled = false;
+  status.textContent="Done.";
+  reportBtn.disabled=false;
+  exportBtn.disabled=false;
 }
 
-/* ---------- UI ---------- */
-function togglePreview(btn) {
-  const card = btn.closest(".domain-card");
-  const preview = card.querySelector(".site-preview");
-  const iframe = preview.querySelector("iframe");
-  const hidden = preview.style.display === "none";
-
-  if (hidden) {
-    if (!iframe.src) iframe.src = iframe.dataset.src;
-    preview.style.display = "";
-    btn.textContent = "Hide Preview";
-  } else {
-    preview.style.display = "none";
-    btn.textContent = "Show Preview";
-  }
+function togglePreview(btn){
+  const p=btn.closest(".domain-card").querySelector(".site-preview");
+  p.style.display=p.style.display==="none"?"":"none";
+  btn.textContent=p.style.display==="none"?"Show Preview":"Hide Preview";
 }
 
-function toggleTheme() {
-  const body = document.body;
-  const btn = document.getElementById("themeBtn");
-  if (body.dataset.theme === "light") {
-    body.dataset.theme = "dark";
-    btn.textContent = "🌙 Dark";
-  } else {
-    body.dataset.theme = "light";
-    btn.textContent = "☀️ Light";
-  }
+function toggleTheme(){
+  document.body.dataset.theme=document.body.dataset.theme==="light"?"dark":"light";
+  themeBtn.textContent=document.body.dataset.theme==="light"?"☀️ Light":"🌙 Dark";
 }
 
-/* ---------- REPORT ---------- */
-function buildReportHTML() {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>SEO Report</title>
-<link href="favicon.png" rel="shortcut icon" type="image/x-icon">
-${document.querySelector("style").outerHTML}
-</head>
-<body class="report-mode" data-theme="${document.body.dataset.theme}">
-<div class="container">
-  <h2>SEO Report</h2>
-  <div class="report-grid">
-    ${document.getElementById("results").innerHTML}
-  </div>
-</div>
-</body>
-</html>`;
+function buildReportHTML(){
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SEO Report</title>${document.querySelector("style").outerHTML}</head>
+<body><div class="container"><h2>SEO Report</h2>${results.innerHTML}</div></body></html>`;
 }
-
-function openReport() {
-  const w = window.open("", "_blank");
-  w.document.write(buildReportHTML());
-  w.document.close();
-}
-
-function exportReportHTML() {
-  const blob = new Blob([buildReportHTML()], { type: "text/html" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `seo-report-${new Date().toISOString().split("T")[0]}.html`;
+function openReport(){const w=window.open("");w.document.write(buildReportHTML());w.document.close();}
+function exportReportHTML(){
+  const blob=new Blob([buildReportHTML()],{type:"text/html"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="seo-report.html";
   a.click();
-  URL.revokeObjectURL(a.href);
 }
 </script>
 </body>
-
 </html>
-
-
-
-
-
