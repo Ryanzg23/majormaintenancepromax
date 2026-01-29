@@ -115,6 +115,7 @@ button:disabled {
   padding:16px;
 }
 
+/* HEADER INSIDE DOMAIN */
 .domain-header {
   display:flex;
   justify-content:space-between;
@@ -153,7 +154,7 @@ button:disabled {
   border-radius:6px;
 }
 
-/* TABLE */
+/* META TABLE */
 table {
   width:100%;
   border-collapse:collapse;
@@ -186,7 +187,7 @@ th { background:rgba(0,0,0,.05); }
   white-space:pre-wrap;
 }
 
-/* REPORT */
+/* REPORT PAGE */
 .report-toolbar {
   display:flex;
   justify-content:space-between;
@@ -200,20 +201,28 @@ th { background:rgba(0,0,0,.05); }
   gap:16px;
 }
 
-/* 🔑 FORCE 2 COLUMNS ALWAYS (SCREEN + PRINT) */
 .report-grid .domain-card {
   width:calc(50% - 8px);
 }
 
-@media (max-width:900px) {
-  .report-grid .domain-card { width:100%; }
+/* REPORT-ONLY OVERRIDES */
+.report-mode button,
+.report-mode a.btn {
+  display:none !important;
 }
 
-/* STATUS */
-.status {
-  margin-top:10px;
-  font-size:13px;
-  opacity:.7;
+/* SCREENSHOT HELPER */
+.screenshot-helper {
+  font-size:12px;
+  background:#f1f5f9;
+  border-left:4px solid #2563eb;
+  padding:10px;
+  margin:10px 0 14px 0;
+  border-radius:6px;
+}
+
+@media (max-width:900px) {
+  .report-grid .domain-card { width:100%; }
 }
 </style>
 </head>
@@ -238,7 +247,7 @@ th { background:rgba(0,0,0,.05); }
   <button id="reportBtn" onclick="openReport()" disabled>OPEN REPORT PAGE</button>
 </div>
 
-<div class="status" id="status"></div>
+<div id="status"></div>
 </div>
 
 <div id="results"></div>
@@ -329,6 +338,7 @@ function togglePreview(btn) {
 
 function openReport() {
   const content = document.getElementById("results").innerHTML;
+
   const win = window.open("", "_blank");
   win.document.write(`
 <!DOCTYPE html>
@@ -337,12 +347,18 @@ function openReport() {
 <title>SEO Report</title>
 ${document.querySelector("style").outerHTML}
 </head>
-<body data-theme="${document.body.dataset.theme}">
+<body class="report-mode" data-theme="${document.body.dataset.theme}">
 <div class="container">
   <div class="report-toolbar">
     <h2>SEO Report</h2>
-    <button onclick="window.print()">Save as PDF</button>
   </div>
+
+  <div class="screenshot-helper">
+    📸 <strong>Screenshot full page for report:</strong><br>
+    Open the site preview above in a new tab and use your screenshot extension
+    (e.g. GoFullPage, Nimbus, Awesome Screenshot) to capture the full page.
+  </div>
+
   <div class="report-grid">
     ${content}
   </div>
