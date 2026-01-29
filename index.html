@@ -302,40 +302,17 @@ function cssCheckAll() {
 /* ---------------- REDIRECT FORMATTER ---------------- */
 
 function formatRedirect(chain, finalUrl) {
-  // Normalize domain (remove protocol + www)
-  const normalizeDomain = url =>
-    url.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
-
-  const finalDomain = normalizeDomain(finalUrl);
-
-  // No redirects at all
   if (!chain || chain.length === 0) {
     return `<strong>${finalUrl}</strong>`;
   }
 
-  // Check if ALL redirects stay on the same domain
-  const sameDomainOnly = chain.every(step =>
-    normalizeDomain(step.url) === finalDomain
-  );
-
-  // Same domain redirects (http/https/www changes only)
-  if (sameDomainOnly) {
-    return `<strong>${finalUrl}</strong>`;
-  }
-
-  // Redirects to a DIFFERENT domain
   if (chain.length === 1) {
     return `301 to <strong>${finalUrl}</strong>`;
   }
 
-  const middle = chain
-    .slice(0, -1)
-    .map(r => r.url)
-    .join(" → ");
-
+  const middle = chain.slice(0, -1).map(r => r.url).join(" → ");
   return `301 to ${middle} → <strong>${finalUrl}</strong>`;
 }
-
 
 /* ---------------- MAIN SEO FUNCTION ---------------- */
 
@@ -365,7 +342,7 @@ async function runSEO() {
     <h3>${esc(d.url)}</h3>
     <div>
       <button onclick="togglePreview(this)">Hide Preview</button>
-      <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
+      <a class="btn" href="${d.url}" target="_blank">Visit ↗</a>
     </div>
   </div>
 
@@ -406,8 +383,6 @@ async function runSEO() {
   reportBtn.disabled = false;
   exportBtn.disabled = false;
 }
-
-
 
 /* ---------------- PREVIEW TOGGLE ---------------- */
 
@@ -474,9 +449,10 @@ function toggleTheme() {
   }
 }
 </script>
-  
 </body>
+
 </html>
+
 
 
 
