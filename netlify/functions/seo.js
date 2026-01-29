@@ -1,58 +1,45 @@
-import fetch from "node-fetch";
-import { URL } from "url";
-
-async function fetchRedirectChain(startUrl, maxHops = 10) {
-  const chain = [];
-  let currentUrl = startUrl;
-
-  for (let i = 0; i < maxHops; i++) {
-    let res;
-    try {
-      res = await fetch(currentUrl, {
-        method: "HEAD",
-        redirect: "manual"
-      });
-    } catch {
-      return { error: true };
-    }
-
-    const status = res.status;
-    const location = res.headers.get("location");
-
-    if (status >= 300 && status < 400 && location) {
-      const nextUrl = new URL(location, currentUrl).href;
-      chain.push({ status, url: nextUrl });
-      currentUrl = nextUrl;
-    } else {
-      return {
-        finalUrl: currentUrl,
-        chain
-      };
-    }
-  }
-
-  return { error: true };
-}
-
 export async function handler(event) {
   try {
     const { url } = JSON.parse(event.body);
-    const targetUrl = url.startsWith("http") ? url : `https://${url}`;
+    const startUrl = url.startsWith("http") ? url : `https://${url}`;
 
-    // Fetch HTML (final resolved page)
-    const pageRes = await fetch(targetUrl);
-    const html = await pageRes.text();
+    // -------- REDIRECT TRACKING --------
+    const redirectChain = [];
+    let currentUrl = startUrl;
 
-    // Meta parsing
-    const getMeta = (name) => {
-      const match = html.match(
-        new RegExp(`<meta[^>]+name=["']${name}["'][^>]+content=["']([^"']+)`, "i")
-      );
-      return match ? match[1] : "";
-    };
+    for (let i = 0; i < 10; i++) {
+      const res = await fetch(currentUrl, {
+        method: "GET",
+        redirect: "manual"
+      });
 
+      if (res.status >= 300 && res.status < 400) {
+        const location = res.headers.get("location");
+        if (!location) break;
+
+        const nextUrl = new URL(location, currentUrl).href;
+        redirectChain.push({
+          status: res.status,
+          url: nextUrl
+        });
+        currentUrl = nextUrl;
+      } else {
+        break;
+      }
+    }
+
+    const finalUrl = currentUrl;
+
+    // -------- FETCH FINAL PAGE CONTENT --------
+    const finalRes = await fetch(finalUrl);
+    const html = await finalRes.text();
+
+    // -------- META PARSING --------
     const title =
       html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] || "";
+
+    const description =
+      html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i)?.[1] || "";
 
     const canonical =
       html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)/i)?.[1] || "";
@@ -60,43 +47,36 @@ export async function handler(event) {
     const amphtml =
       html.match(/<link[^>]+rel=["']amphtml["'][^>]+href=["']([^"']+)/i)?.[1] || "";
 
-    // Robots
-    const root = new URL(targetUrl).origin;
+    // -------- ROBOTS & SITEMAP (ROOT DOMAIN) --------
+    const root = new URL(finalUrl).origin;
+
     const robotsRes = await fetch(`${root}/robots.txt`).catch(() => null);
     const robots =
       robotsRes && robotsRes.ok
         ? { found: true, content: await robotsRes.text() }
         : { found: false };
 
-    // Sitemap
     const sitemapRes = await fetch(`${root}/sitemap.xml`).catch(() => null);
     const sitemap =
       sitemapRes && sitemapRes.ok
         ? { found: true, content: await sitemapRes.text() }
         : { found: false };
 
-    // Redirect detection
-    const redirectData = await fetchRedirectChain(targetUrl);
+    // -------- REDIRECT STATUS OUTPUT --------
+    let redirectStatus = finalUrl;
 
-    let redirectStatus = "Unable to resolve";
-
-    if (!redirectData.error) {
-      if (redirectData.chain.length === 0) {
-        redirectStatus = redirectData.finalUrl;
-      } else {
-        const chainText = redirectData.chain
-          .map(step => `${step.status} to ${step.url}`)
-          .join(" → ");
-        redirectStatus = chainText;
-      }
+    if (redirectChain.length > 0) {
+      redirectStatus = redirectChain
+        .map(r => `${r.status} to ${r.url}`)
+        .join(" → ");
     }
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        url: targetUrl,
+        url: startUrl,
         title,
-        description: getMeta("description"),
+        description,
         canonical,
         amphtml,
         robots,
@@ -105,7 +85,13 @@ export async function handler(event) {
       })
     };
 
-  } catch (e) {
-    return { statusCode: 500, body: JSON.stringify({ error: true }) };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: true,
+        message: err.message || "Unknown error"
+      })
+    };
   }
 }
