@@ -26,6 +26,7 @@ header {
   justify-content:space-between;
   align-items:center;
   gap:10px;
+  flex-wrap:wrap;
 }
 
 h1 { margin:0; font-size:20px; }
@@ -41,7 +42,7 @@ textarea {
 }
 
 /* BUTTONS */
-button {
+button, a.btn {
   padding:10px 14px;
   border:none;
   border-radius:8px;
@@ -50,9 +51,15 @@ button {
   color:#fff;
   font-weight:600;
   font-size:13px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  transition:.15s;
 }
 
-button:hover:not(:disabled) {
+button:hover:not(:disabled),
+a.btn:hover {
   transform:translateY(-1px);
   box-shadow:0 6px 18px rgba(0,0,0,.2);
 }
@@ -69,6 +76,8 @@ button:disabled {
   margin-top:10px;
 }
 
+.actions button { flex:1 1 220px; }
+
 .card {
   background:#fff;
   padding:15px;
@@ -76,37 +85,38 @@ button:disabled {
   margin-top:15px;
 }
 
-/* RESULTS GRID (REPORT PREVIEW) */
-.report-grid {
-  display:flex;
-  flex-wrap:wrap;
-  gap:16px;
-  margin-top:20px;
-}
-
-.report-item {
-  width:calc(50% - 8px);
-  background:#fff;
+/* DOMAIN CARD */
+.domain-card {
+  border-radius:14px;
+  padding:16px;
+  margin-top:22px;
   border:1px solid #ddd;
-  border-radius:12px;
-  padding:14px;
+  background:#fff;
 }
 
-.report-item h3 {
-  margin:0 0 10px 0;
-  font-size:15px;
+.domain-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.domain-header h3 {
+  margin:0;
+  font-size:16px;
   word-break:break-all;
 }
 
 /* SITE PREVIEW */
 .site-preview {
   position:relative;
-  margin-bottom:12px;
+  margin:12px 0;
 }
 
 .site-preview iframe {
   width:100%;
-  height:280px;
+  height:260px;
   border:1px solid #ccc;
   border-radius:10px;
 }
@@ -138,6 +148,12 @@ th, td {
 th { background:#f0f0f0; }
 
 /* ROBOTS / SITEMAP */
+.preview {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
 .code-block {
   background:#0f172a;
   color:#e5e7eb;
@@ -147,10 +163,9 @@ th { background:#f0f0f0; }
   max-height:180px;
   overflow:auto;
   white-space:pre-wrap;
-  margin-bottom:10px;
 }
 
-/* REPORT PAGE TOP BAR */
+/* REPORT PAGE */
 .report-toolbar {
   display:flex;
   justify-content:space-between;
@@ -158,20 +173,18 @@ th { background:#f0f0f0; }
   margin-bottom:16px;
 }
 
-/* PRINT STYLES */
-@media print {
-  body { background:#fff; }
-  .report-toolbar { display:none; }
-  .report-item {
-    width:100%;
-    page-break-inside:avoid;
-    break-inside:avoid;
-  }
+.report-grid {
+  display:flex;
+  flex-wrap:wrap;
+  gap:16px;
 }
 
-/* MOBILE */
+.report-grid .domain-card {
+  width:calc(50% - 8px);
+}
+
 @media (max-width:900px) {
-  .report-item { width:100%; }
+  .report-grid .domain-card { width:100%; }
 }
 </style>
 </head>
@@ -187,6 +200,10 @@ th { background:#f0f0f0; }
 <textarea id="urls" placeholder="One domain or URL per line"></textarea>
 
 <div class="actions">
+  <button onclick="ampTestAll()">AMP TEST ALL</button>
+  <button onclick="pageSpeedAll()">PAGE SPEED ALL</button>
+  <button onclick="scanAll()">SCAN ALL</button>
+  <button onclick="cssCheckAll()">CHECK ALL CSS</button>
   <button onclick="runSEO()">GENERATE META + ROBOTS</button>
   <button id="reportBtn" onclick="openReport()" disabled>
     OPEN REPORT PAGE
@@ -196,24 +213,36 @@ th { background:#f0f0f0; }
 <div id="status"></div>
 </div>
 
-<div id="rawResults" style="display:none;"></div>
+<div id="results"></div>
 
 </div>
 
 <script>
-async function runSEO() {
-  const urls = document.getElementById("urls").value
-    .split("\n").map(u=>u.trim()).filter(Boolean);
+const getUrls = () =>
+  document.getElementById("urls").value
+    .split("\n")
+    .map(u => u.trim())
+    .filter(Boolean);
 
-  const raw = document.getElementById("rawResults");
+const openWithDelay = (urls, builder, delay=700) =>
+  urls.forEach((u,i)=>setTimeout(()=>window.open(builder(u),"_blank"),i*delay));
+
+function ampTestAll(){openWithDelay(getUrls(),u=>`https://search.google.com/test/amp?url=${encodeURIComponent(u)}`)}
+function pageSpeedAll(){openWithDelay(getUrls(),u=>`https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`)}
+function scanAll(){openWithDelay(getUrls(),u=>`https://sitecheck.sucuri.net/results/${encodeURIComponent(u)}`)}
+function cssCheckAll(){openWithDelay(getUrls(),u=>`https://jigsaw.w3.org/css-validator/validator?uri=${encodeURIComponent(u)}`)}
+
+async function runSEO() {
+  const urls = getUrls();
+  const results = document.getElementById("results");
   const status = document.getElementById("status");
   const reportBtn = document.getElementById("reportBtn");
 
-  raw.innerHTML = "";
+  results.innerHTML = "";
   reportBtn.disabled = true;
 
-  for (let i=0;i<urls.length;i++) {
-    status.textContent = `Processing ${i+1} / ${urls.length}`;
+  for (let i = 0; i < urls.length; i++) {
+    status.textContent = `Processing ${i + 1} / ${urls.length}`;
 
     const res = await fetch("/.netlify/functions/seo", {
       method:"POST",
@@ -222,9 +251,12 @@ async function runSEO() {
     });
     const d = await res.json();
 
-    raw.innerHTML += `
-<div class="report-item">
-  <h3>${d.url}</h3>
+    results.innerHTML += `
+<div class="domain-card">
+  <div class="domain-header">
+    <h3>${d.url}</h3>
+    <a class="btn" href="${d.url}" target="_blank">Visit Site ↗</a>
+  </div>
 
   <div class="site-preview">
     <div class="preview-label">Site Preview</div>
@@ -238,11 +270,16 @@ async function runSEO() {
     <tr><th>AMP</th><td>${d.amphtml||"-"}</td></tr>
   </table>
 
-  <strong>Robots.txt</strong>
-  <div class="code-block">${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}</div>
-
-  <strong>Sitemap.xml</strong>
-  <div class="code-block">${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}</div>
+  <div class="preview">
+    <div>
+      <strong>Robots.txt</strong>
+      <div class="code-block">${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}</div>
+    </div>
+    <div>
+      <strong>Sitemap.xml</strong>
+      <div class="code-block">${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}</div>
+    </div>
+  </div>
 </div>`;
   }
 
@@ -251,7 +288,7 @@ async function runSEO() {
 }
 
 function openReport() {
-  const content = document.getElementById("rawResults").innerHTML;
+  const content = document.getElementById("results").innerHTML;
 
   const win = window.open("", "_blank");
   win.document.write(`
