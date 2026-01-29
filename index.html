@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="favicon.png" rel="shortcut icon" type="image/x-icon">
 <title>MAJOR MAINTENANCE PRO MAX</title>
 
 <style>
@@ -63,10 +62,7 @@ header {
   flex-wrap:wrap;
 }
 
-h1 {
-  margin:0;
-  font-size:20px;
-}
+h1 { margin:0; font-size:20px; }
 
 /* INPUT */
 textarea {
@@ -79,8 +75,7 @@ textarea {
 }
 
 /* BUTTONS */
-button,
-a.btn {
+button, a.btn {
   padding:10px 14px;
   border:none;
   border-radius:8px;
@@ -94,14 +89,12 @@ a.btn {
   gap:6px;
   font-size:13px;
   text-decoration:none;
-  transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  transition:.15s;
 }
 
-button:hover,
-a.btn:hover {
+button:hover, a.btn:hover {
   transform:translateY(-1px);
   box-shadow:0 6px 18px rgba(0,0,0,.2);
-  filter:brightness(1.08);
 }
 
 /* CARD */
@@ -132,13 +125,11 @@ a.btn:hover {
 .domain-a { background:var(--cardA); }
 .domain-b { background:var(--cardB); }
 
-/* DOMAIN HEADER */
 .domain-header {
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:10px;
-  margin-bottom:10px;
   flex-wrap:wrap;
 }
 
@@ -158,35 +149,31 @@ a.btn:hover {
 .site-preview {
   position:relative;
   margin:12px 0;
-  resize:both;                 /* ✅ RESIZE HANDLE */
+  resize:both;
   overflow:auto;
-  min-height:200px;
+  min-height:220px;
   max-height:70vh;
-  border-radius:10px;
 }
 
 .site-preview iframe {
   width:100%;
   height:100%;
-  min-height:260px;
+  min-height:280px;
   border:1px solid var(--border);
   border-radius:10px;
-  background:#fff;
 }
 
-/* PREVIEW LABEL */
 .preview-label {
   position:absolute;
   top:10px;
   left:10px;
   background:rgba(0,0,0,.75);
   color:#fff;
-  font-size:13px;             /* ✅ BIGGER LABEL */
+  font-size:13px;
   font-weight:600;
   padding:6px 12px;
   border-radius:8px;
   z-index:2;
-  pointer-events:none;
 }
 
 /* TABLE */
@@ -206,7 +193,6 @@ thead th {
 td, th {
   border:1px solid var(--border);
   padding:10px;
-  vertical-align:middle;
 }
 
 /* ROBOTS / SITEMAP */
@@ -217,12 +203,7 @@ td, th {
   margin-top:15px;
 }
 
-.preview > div { min-width:0; }
-
-.preview h4 {
-  margin:0 0 6px 0;
-  font-size:14px;
-}
+.preview h4 { margin:0 0 6px; }
 
 pre {
   background:var(--code-bg);
@@ -232,24 +213,28 @@ pre {
   max-height:260px;
   overflow:auto;
   font-size:12px;
-  font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   white-space:pre-wrap;
   overflow-wrap:anywhere;
 }
 
 /* STATUS */
-.status {
-  margin-top:10px;
-  font-size:13px;
-  opacity:.7;
+.status { margin-top:10px; font-size:13px; opacity:.7; }
+
+/* ===================== */
+/* PRINT / PDF STYLES    */
+/* ===================== */
+@media print {
+  body { background:#fff; color:#000; }
+  .page-break { page-break-before: always; break-before: page; }
+  .pdf-preview iframe { height:520px; }
+  pre { max-height:none !important; }
 }
 
 /* MOBILE */
 @media (max-width:768px) {
-  header { flex-direction:column; align-items:flex-start; }
   .actions button { flex:1 1 100%; }
   .preview { grid-template-columns:1fr; }
-  .site-preview { resize:none; } /* no resize drag on mobile */
+  .site-preview { resize:none; }
 }
 </style>
 </head>
@@ -259,7 +244,7 @@ pre {
 
 <header>
   <h1>MAJOR MAINTENANCE PRO MAX</h1>
-  <button id="themeBtn" onclick="toggleTheme()">☀️ Light</button>
+  <button onclick="toggleTheme()">☀️ Light</button>
 </header>
 
 <div class="card">
@@ -271,6 +256,7 @@ pre {
   <button onclick="scanAll()">SCAN ALL</button>
   <button onclick="cssCheckAll()">CHECK ALL CSS</button>
   <button onclick="runSEO()">GENERATE META + ROBOTS</button>
+  <button onclick="generatePDFReport()">GENERATE PDF REPORT</button>
 </div>
 
 <div class="status" id="status"></div>
@@ -297,101 +283,94 @@ function cssCheckAll(){openWithDelay(getUrls(),u=>`https://jigsaw.w3.org/css-val
 
 async function runSEO() {
   const urls = getUrls();
-  const container = document.getElementById("results");
-  const status = document.getElementById("status");
-  container.innerHTML = "";
-
+  const out = document.getElementById("results");
+  out.innerHTML = "";
   for (let i=0;i<urls.length;i++) {
-    status.textContent = `Processing ${i+1}/${urls.length}`;
     const res = await fetch("/.netlify/functions/seo", {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body:JSON.stringify({ url: urls[i] })
     });
     const d = await res.json();
-    const cls = i % 2 === 0 ? "domain-a" : "domain-b";
+    const cls = i % 2 ? "domain-b" : "domain-a";
 
-    container.innerHTML += `
+    out.innerHTML += `
 <div class="domain-card ${cls}">
   <div class="domain-header">
     <h3>${d.url}</h3>
     <div class="domain-actions">
-      <button onclick="togglePreview(this)">Hide Preview</button>
       <a class="btn" href="${d.url}" target="_blank">Visit Site ↗</a>
     </div>
   </div>
 
   <div class="site-preview">
     <div class="preview-label">Site Preview</div>
-    <iframe src="${d.url}" loading="lazy"></iframe>
+    <iframe src="${d.url}"></iframe>
   </div>
 
   <table>
-    <thead>
-      <tr>
-        <th>Title</th>
-        <th>Description</th>
-        <th>Canonical</th>
-        <th>AMP HTML</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td data-label="Title">${esc(d.title)}</td>
-        <td data-label="Description">${esc(d.description)}</td>
-        <td data-label="Canonical">${d.canonical || "-"}</td>
-        <td data-label="AMP HTML">${d.amphtml || "-"}</td>
-      </tr>
-    </tbody>
+    <thead><tr><th>Title</th><th>Description</th><th>Canonical</th><th>AMP</th></tr></thead>
+    <tbody><tr>
+      <td>${esc(d.title)}</td>
+      <td>${esc(d.description)}</td>
+      <td>${d.canonical||"-"}</td>
+      <td>${d.amphtml||"-"}</td>
+    </tr></tbody>
   </table>
 
   <div class="preview">
-  <div>
-    <h4>Robots.txt (Status: ${d.robots.status})</h4>
-    <pre>${d.robots.found ? esc(d.robots.content) : "robots.txt not found"}</pre>
+    <div>
+      <h4>Robots.txt</h4>
+      <pre>${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}</pre>
+    </div>
+    <div>
+      <h4>Sitemap.xml</h4>
+      <pre>${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}</pre>
+    </div>
   </div>
-  <div>
-    <h4>Sitemap.xml (Status: ${d.sitemap.status})</h4>
-    <pre>${d.sitemap.found ? esc(d.sitemap.content) : "sitemap.xml not found"}</pre>
-  </div>
-</div>
-
 </div>`;
   }
-
-  status.textContent = "Done.";
 }
 
-function togglePreview(btn) {
-  const preview = btn.closest(".domain-card").querySelector(".site-preview");
-  if (preview.style.display === "none") {
-    preview.style.display = "block";
-    btn.textContent = "Hide Preview";
-  } else {
-    preview.style.display = "none";
-    btn.textContent = "Show Preview";
-  }
+function generatePDFReport() {
+  const cards = document.querySelectorAll(".domain-card");
+  if (!cards.length) return alert("No results to export");
+
+  let html = `
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>SEO PDF Report</title>
+<style>
+body{font-family:system-ui;margin:0;color:#000}
+h2{margin:0 0 6px}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:8px}
+pre{background:#f5f5f5;padding:10px;white-space:pre-wrap}
+.page-break{page-break-before:always}
+iframe{width:100%;height:520px;border:1px solid #ccc}
+</style></head><body>
+`;
+
+  cards.forEach((c,i)=>{
+    html += `<h2>${c.querySelector("h3").innerText}</h2>`;
+    html += c.querySelector(".site-preview").outerHTML;
+    html += c.querySelector("table").outerHTML;
+    html += c.querySelector(".preview").outerHTML;
+    if(i<cards.length-1) html += `<div class="page-break"></div>`;
+  });
+
+  html += `<script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`;
+  const w = window.open("");
+  w.document.write(html);
+  w.document.close();
 }
 
-const esc = t => (t||"").replace(/[&<>"']/g,m=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",
-  '"':"&quot;","'":"&#039;"
-}[m]));
+const esc = s => (s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 
-function toggleTheme() {
-  const body = document.body;
-  const btn = document.getElementById("themeBtn");
-  if (body.dataset.theme === "light") {
-    body.dataset.theme = "dark";
-    btn.textContent = "🌙 Dark";
-  } else {
-    body.dataset.theme = "light";
-    btn.textContent = "☀️ Light";
-  }
+function toggleTheme(){
+  document.body.dataset.theme =
+    document.body.dataset.theme === "dark" ? "light" : "dark";
 }
 </script>
 
 </body>
 </html>
-
-
