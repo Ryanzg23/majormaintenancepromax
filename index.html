@@ -44,7 +44,6 @@ body {
   padding:16px;
 }
 
-/* EXPORT REPORT WIDTH */
 .report-mode .container {
   max-width:1400px;
 }
@@ -111,9 +110,7 @@ button:disabled {
 
 .actions button { flex:1 1 220px; }
 
-#results {
-  margin-top:28px;
-}
+#results { margin-top:28px; }
 
 .domain-card {
   background:var(--card);
@@ -199,7 +196,7 @@ th { background:rgba(0,0,0,.05); }
   word-break:break-word;
 }
 
-/* REPORT GRID (2 COLUMNS) */
+/* REPORT GRID */
 .report-grid {
   display:flex;
   flex-wrap:wrap;
@@ -210,7 +207,7 @@ th { background:rgba(0,0,0,.05); }
   width:calc(50% - 8px);
 }
 
-/* EXPORT MODE — REMOVE BUTTONS */
+/* Report/export: remove buttons */
 .report-mode button,
 .report-mode a.btn {
   display:none !important;
@@ -240,9 +237,8 @@ th { background:rgba(0,0,0,.05); }
   <button onclick="scanAll()">SCAN ALL</button>
   <button onclick="cssCheckAll()">CHECK ALL CSS</button>
   <button onclick="runSEO()">GENERATE META + ROBOTS</button>
-  <button id="exportBtn" onclick="exportReportHTML()" disabled>
-    EXPORT REPORT (HTML)
-  </button>
+  <button id="reportBtn" onclick="openReport()" disabled>OPEN REPORT PAGE</button>
+  <button id="exportBtn" onclick="exportReportHTML()" disabled>EXPORT REPORT (HTML)</button>
 </div>
 
 <div class="status" id="status"></div>
@@ -254,8 +250,7 @@ th { background:rgba(0,0,0,.05); }
 
 <script>
 const getUrls = () =>
-  document.getElementById("urls").value
-    .split("\n").map(u=>u.trim()).filter(Boolean);
+  document.getElementById("urls").value.split("\n").map(u=>u.trim()).filter(Boolean);
 
 const openWithDelay = (urls, builder, delay=700) =>
   urls.forEach((u,i)=>setTimeout(()=>window.open(builder(u),"_blank"),i*delay));
@@ -270,7 +265,8 @@ async function runSEO() {
   const results = document.getElementById("results");
   const status = document.getElementById("status");
 
-  document.getElementById("exportBtn").disabled = true;
+  reportBtn.disabled = true;
+  exportBtn.disabled = true;
   results.innerHTML = "";
 
   for (let i=0;i<urls.length;i++) {
@@ -320,7 +316,8 @@ async function runSEO() {
   }
 
   status.textContent = "Done.";
-  document.getElementById("exportBtn").disabled = false;
+  reportBtn.disabled = false;
+  exportBtn.disabled = false;
 }
 
 function togglePreview(btn) {
@@ -329,19 +326,13 @@ function togglePreview(btn) {
   btn.textContent = preview.style.display === "none" ? "Show Preview" : "Hide Preview";
 }
 
-function exportReportHTML() {
+function buildReportHTML() {
   const content = document.getElementById("results").innerHTML;
-  if (!content.trim()) {
-    alert("No report data to export.");
-    return;
-  }
-
-  const html = `
+  return `
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SEO Report</title>
 <link href="favicon.png" rel="shortcut icon" type="image/x-icon">
 ${document.querySelector("style").outerHTML}
@@ -356,7 +347,16 @@ ${document.querySelector("style").outerHTML}
 </body>
 </html>
 `;
+}
 
+function openReport() {
+  const win = window.open("", "_blank");
+  win.document.write(buildReportHTML());
+  win.document.close();
+}
+
+function exportReportHTML() {
+  const html = buildReportHTML();
   const blob = new Blob([html], { type:"text/html" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
