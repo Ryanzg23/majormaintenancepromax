@@ -91,8 +91,8 @@ a.btn {
   align-items:center;
   justify-content:center;
   gap:6px;
-  text-decoration:none;
   font-size:13px;
+  text-decoration:none;
   transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
 }
 
@@ -100,13 +100,7 @@ button:hover,
 a.btn:hover {
   transform:translateY(-1px);
   box-shadow:0 6px 18px rgba(0,0,0,.2);
-  filter:brightness(1.05);
-}
-
-button:active,
-a.btn:active {
-  transform:translateY(0);
-  box-shadow:0 3px 10px rgba(0,0,0,.15);
+  filter:brightness(1.08);
 }
 
 /* CARD */
@@ -161,14 +155,19 @@ a.btn:active {
 
 /* SITE PREVIEW */
 .site-preview {
-  display:none;
-  margin:12px 0;
   position:relative;
+  margin:12px 0;
+  resize:both;                 /* ✅ RESIZE HANDLE */
+  overflow:auto;
+  min-height:200px;
+  max-height:70vh;
+  border-radius:10px;
 }
 
 .site-preview iframe {
   width:100%;
-  height:260px;
+  height:100%;
+  min-height:260px;
   border:1px solid var(--border);
   border-radius:10px;
   background:#fff;
@@ -177,13 +176,14 @@ a.btn:active {
 /* PREVIEW LABEL */
 .preview-label {
   position:absolute;
-  top:8px;
-  left:8px;
-  background:rgba(0,0,0,.7);
+  top:10px;
+  left:10px;
+  background:rgba(0,0,0,.75);
   color:#fff;
-  font-size:11px;
-  padding:4px 8px;
-  border-radius:6px;
+  font-size:13px;             /* ✅ BIGGER LABEL */
+  font-weight:600;
+  padding:6px 12px;
+  border-radius:8px;
   z-index:2;
   pointer-events:none;
 }
@@ -245,27 +245,10 @@ pre {
 
 /* MOBILE */
 @media (max-width:768px) {
-  header {
-    flex-direction:column;
-    align-items:flex-start;
-  }
-
-  .actions button {
-    flex:1 1 100%;
-  }
-
-  .preview {
-    grid-template-columns:1fr;
-  }
-
-  .site-preview iframe {
-    height:200px;
-  }
-
-  .domain-header {
-    flex-direction:column;
-    align-items:flex-start;
-  }
+  header { flex-direction:column; align-items:flex-start; }
+  .actions button { flex:1 1 100%; }
+  .preview { grid-template-columns:1fr; }
+  .site-preview { resize:none; } /* no resize drag on mobile */
 }
 </style>
 </head>
@@ -326,21 +309,20 @@ async function runSEO() {
     });
     const d = await res.json();
     const cls = i % 2 === 0 ? "domain-a" : "domain-b";
-    const previewId = `preview-${i}`;
 
     container.innerHTML += `
 <div class="domain-card ${cls}">
   <div class="domain-header">
     <h3>${d.url}</h3>
     <div class="domain-actions">
-      <button onclick="togglePreview('${previewId}', '${d.url}', this)">Show Preview</button>
+      <button onclick="togglePreview(this)">Hide Preview</button>
       <a class="btn" href="${d.url}" target="_blank">Visit Site ↗</a>
     </div>
   </div>
 
-  <div class="site-preview" id="${previewId}">
+  <div class="site-preview">
     <div class="preview-label">Site Preview</div>
-    <iframe loading="lazy"></iframe>
+    <iframe src="${d.url}" loading="lazy"></iframe>
   </div>
 
   <table>
@@ -378,17 +360,14 @@ async function runSEO() {
   status.textContent = "Done.";
 }
 
-function togglePreview(id, url, btn) {
-  const box = document.getElementById(id);
-  const iframe = box.querySelector("iframe");
-
-  if (box.style.display === "block") {
-    box.style.display = "none";
-    btn.textContent = "Show Preview";
-  } else {
-    box.style.display = "block";
-    if (!iframe.src) iframe.src = url;
+function togglePreview(btn) {
+  const preview = btn.closest(".domain-card").querySelector(".site-preview");
+  if (preview.style.display === "none") {
+    preview.style.display = "block";
     btn.textContent = "Hide Preview";
+  } else {
+    preview.style.display = "none";
+    btn.textContent = "Show Preview";
   }
 }
 
