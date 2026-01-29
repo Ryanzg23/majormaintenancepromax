@@ -63,54 +63,6 @@ export async function handler(event) {
         ? { found: true, content: await sitemapRes.text() }
         : { found: false };
 
-    /* ---------------- DNS IP LOOKUP ---------------- */
-
-    const hostname = new URL(finalUrl).hostname;
-    const dnsRes = await fetch(
-      `https://dns.google/resolve?name=${hostname}&type=A`
-    );
-    const dnsJson = await dnsRes.json();
-
-    const ips =
-      dnsJson.Answer?.map(a => a.data).filter(Boolean) || [];
-
-    /* ---------------- LOAD CPANEL IP LIST ---------------- */
-
-    // 🔴 REPLACE THIS WITH YOUR PUBLISHED CSV URL
-    const CPANEL_CSV_URL =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2U3uOILXKnV9VTDJgH2LzuP9uG2SGRf_w65CSL9VXcwIyFrWNNpmycqSQwgl5SwuP6N2HQI8ibXWv/pub?output=csv";
-
-    let cpanelMap = {};
-
-    try {
-      const csvRes = await fetch(CPANEL_CSV_URL);
-      const csvText = await csvRes.text();
-
-      csvText.split("\n").slice(1).forEach(row => {
-        const [name, ip] = row.split(",");
-        if (name && ip) {
-          cpanelMap[ip.trim()] = name.trim();
-        }
-      });
-    } catch {
-      // fail silently
-    }
-
-    /* ---------------- MATCH CPANEL ---------------- */
-
-    let cpanelName = "";
-
-    for (const ip of ips) {
-      if (cpanelMap[ip]) {
-        cpanelName = cpanelMap[ip];
-        break;
-      }
-    }
-
-    if (!cpanelName) {
-      cpanelName = ips.length ? "Unknown / CDN / Not in list" : "No IP detected";
-    }
-
     /* ---------------- RESPONSE ---------------- */
 
     return {
@@ -124,9 +76,7 @@ export async function handler(event) {
         canonical,
         amphtml,
         robots,
-        sitemap,
-        ips,
-        cpanelName
+        sitemap
       })
     };
 
