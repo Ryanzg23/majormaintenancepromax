@@ -345,15 +345,16 @@ async function runSEO() {
   </table>
 
   <div class="preview">
-    <div>
-      <h4>Robots.txt (Status: ${d.robots.status || "N/A"})</h4>
-      <pre>${esc(d.robots.content || "")}</pre>
-    </div>
-    <div>
-      <h4>Sitemap.xml (Status: ${d.sitemap.status || "N/A"})</h4>
-      <pre>${esc(d.sitemap.content || "")}</pre>
-    </div>
+  <div>
+    <h4>Robots.txt (Status: ${d.robots.status})</h4>
+    <pre>${d.robots.found ? esc(d.robots.content) : "robots.txt not found"}</pre>
   </div>
+  <div>
+    <h4>Sitemap.xml (Status: ${d.sitemap.status})</h4>
+    <pre>${d.sitemap.found ? esc(d.sitemap.content) : "sitemap.xml not found"}</pre>
+  </div>
+</div>
+
 </div>`;
   }
 
@@ -391,3 +392,4 @@ function toggleTheme() {
 
 </body>
 </html>
+
