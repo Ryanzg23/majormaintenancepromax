@@ -357,7 +357,7 @@ async function runSEO() {
     });
 
     const d = await res.json();
-    const cross = isCrossDomainRedirect(d.redirectChain, d.finalUrl);
+    const cross = isCrossDomainRedirect(d.redirectChain, d.finalUrl, d.url);
 
     results.innerHTML += `
 <div class="domain-card">
@@ -488,5 +488,6 @@ function exportReportHTML() {
 </body>
 
 </html>
+
 
 
