@@ -7,7 +7,7 @@
 <link href="favicon.png" rel="shortcut icon" type="image/x-icon">
 
 <style>
-* { box-sizing:border-box; }
+* { box-sizing: border-box; }
 
 :root {
   --bg:#f5f5f5;
@@ -42,10 +42,6 @@ body {
   max-width:1200px;
   margin:auto;
   padding:16px;
-}
-
-.report-mode .container {
-  max-width:1400px;
 }
 
 header {
@@ -196,26 +192,8 @@ th { background:rgba(0,0,0,.05); }
   word-break:break-word;
 }
 
-/* REPORT GRID */
-.report-grid {
-  display:flex;
-  flex-wrap:wrap;
-  gap:16px;
-}
-
-.report-grid .domain-card {
-  width:calc(50% - 8px);
-}
-
-/* Report/export: remove buttons */
-.report-mode button,
-.report-mode a.btn {
-  display:none !important;
-}
-
 @media (max-width:900px) {
   .preview { grid-template-columns:1fr; }
-  .report-grid .domain-card { width:100%; }
 }
 </style>
 </head>
@@ -237,10 +215,6 @@ th { background:rgba(0,0,0,.05); }
   <button onclick="scanAll()">SCAN ALL</button>
   <button onclick="cssCheckAll()">CHECK ALL CSS</button>
   <button onclick="runSEO()">GENERATE META + ROBOTS</button>
-  <button id="reportBtn" onclick="openReport()" disabled>OPEN REPORT PAGE</button>
-  <button id="exportBtn" onclick="exportReportHTML()" disabled>
-    EXPORT REPORT (HTML)
-  </button>
 </div>
 
 <div class="status" id="status"></div>
@@ -251,7 +225,7 @@ th { background:rgba(0,0,0,.05); }
 </div>
 
 <script>
-/* ---------------- UTILITIES ---------------- */
+/* ---------- HELPERS ---------- */
 
 const getUrls = () =>
   document.getElementById("urls").value
@@ -260,49 +234,37 @@ const getUrls = () =>
     .filter(Boolean);
 
 const openWithDelay = (urls, builder, delay = 700) =>
-  urls.forEach((u, i) =>
+  urls.forEach((u,i) =>
     setTimeout(() => window.open(builder(u), "_blank"), i * delay)
   );
 
 const esc = s =>
-  (s || "").replace(/[&<>"']/g, m => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
+  (s||"").replace(/[&<>"']/g,m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",
+    '"':"&quot;","'":"&#039;"
   }[m]));
 
-/* ---------------- BULK TOOLS ---------------- */
+/* ---------- BULK TOOLS ---------- */
 
-function ampTestAll() {
-  openWithDelay(getUrls(), u =>
-    `https://search.google.com/test/amp?url=${encodeURIComponent(u)}`
-  );
-}
+function ampTestAll(){openWithDelay(getUrls(),u=>`https://search.google.com/test/amp?url=${encodeURIComponent(u)}`)}
+function pageSpeedAll(){openWithDelay(getUrls(),u=>`https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`)}
+function scanAll(){openWithDelay(getUrls(),u=>`https://sitecheck.sucuri.net/results/${encodeURIComponent(u)}`)}
+function cssCheckAll(){openWithDelay(getUrls(),u=>`https://jigsaw.w3.org/css-validator/validator?uri=${encodeURIComponent(u)}`)}
 
-function pageSpeedAll() {
-  openWithDelay(getUrls(), u =>
-    `https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`
-  );
-}
-
-function scanAll() {
-  openWithDelay(getUrls(), u =>
-    `https://sitecheck.sucuri.net/results/${encodeURIComponent(u)}`
-  );
-}
-
-function cssCheckAll() {
-  openWithDelay(getUrls(), u =>
-    `https://jigsaw.w3.org/css-validator/validator?uri=${encodeURIComponent(u)}`
-  );
-}
-
-/* ---------------- REDIRECT FORMATTER ---------------- */
+/* ---------- REDIRECT FORMAT ---------- */
 
 function formatRedirect(chain, finalUrl) {
+  const normalize = u =>
+    u.replace(/^https?:\/\//,"").replace(/^www\./,"").split("/")[0];
+
   if (!chain || chain.length === 0) {
+    return `<strong>${finalUrl}</strong>`;
+  }
+
+  const finalDomain = normalize(finalUrl);
+  const sameDomain = chain.every(r => normalize(r.url) === finalDomain);
+
+  if (sameDomain) {
     return `<strong>${finalUrl}</strong>`;
   }
 
@@ -310,28 +272,25 @@ function formatRedirect(chain, finalUrl) {
     return `301 to <strong>${finalUrl}</strong>`;
   }
 
-  const middle = chain.slice(0, -1).map(r => r.url).join(" → ");
-  return `301 to ${middle} → <strong>${finalUrl}</strong>`;
+  return `301 to ${chain.slice(0,-1).map(r=>r.url).join(" → ")} → <strong>${finalUrl}</strong>`;
 }
 
-/* ---------------- MAIN SEO FUNCTION ---------------- */
+/* ---------- MAIN ---------- */
 
 async function runSEO() {
   const urls = getUrls();
   const results = document.getElementById("results");
   const status = document.getElementById("status");
 
-  reportBtn.disabled = true;
-  exportBtn.disabled = true;
   results.innerHTML = "";
 
-  for (let i = 0; i < urls.length; i++) {
-    status.textContent = `Processing ${i + 1} / ${urls.length}`;
+  for (let i=0;i<urls.length;i++) {
+    status.textContent = `Processing ${i+1} / ${urls.length}`;
 
     const res = await fetch("/.netlify/functions/seo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: urls[i] })
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ url: urls[i] })
     });
 
     const d = await res.json();
@@ -340,10 +299,7 @@ async function runSEO() {
 <div class="domain-card">
   <div class="domain-header">
     <h3>${esc(d.url)}</h3>
-    <div>
-      <button onclick="togglePreview(this)">Hide Preview</button>
-      <a class="btn" href="${d.url}" target="_blank">Visit ↗</a>
-    </div>
+    <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
   </div>
 
   <div class="site-preview">
@@ -354,92 +310,30 @@ async function runSEO() {
   <table>
     <tr><th>Title</th><td>${esc(d.title)}</td></tr>
     <tr><th>Description</th><td>${esc(d.description)}</td></tr>
-    <tr><th>Canonical</th><td>${d.canonical || "-"}</td></tr>
-    <tr><th>AMP</th><td>${d.amphtml || "-"}</td></tr>
-    <tr>
-      <th>Redirect / Final URL</th>
-      <td>${formatRedirect(d.redirectChain, d.finalUrl)}</td>
-    </tr>
+    <tr><th>Canonical</th><td>${d.canonical||"-"}</td></tr>
+    <tr><th>AMP</th><td>${d.amphtml||"-"}</td></tr>
+    <tr><th>Redirect / Final URL</th><td>${formatRedirect(d.redirectChain,d.finalUrl)}</td></tr>
   </table>
 
   <div class="preview">
     <div>
       <strong>Robots.txt</strong>
-      <div class="code-block">
-        ${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}
-      </div>
+      <div class="code-block">${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}</div>
     </div>
     <div>
       <strong>Sitemap.xml</strong>
-      <div class="code-block">
-        ${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}
-      </div>
+      <div class="code-block">${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}</div>
     </div>
   </div>
 </div>`;
   }
 
   status.textContent = "Done.";
-  reportBtn.disabled = false;
-  exportBtn.disabled = false;
 }
-
-/* ---------------- PREVIEW TOGGLE ---------------- */
-
-function togglePreview(btn) {
-  const preview = btn.closest(".domain-card").querySelector(".site-preview");
-  const hidden = preview.style.display === "none";
-  preview.style.display = hidden ? "" : "none";
-  btn.textContent = hidden ? "Hide Preview" : "Show Preview";
-}
-
-/* ---------------- REPORT / EXPORT ---------------- */
-
-function buildReportHTML() {
-  const content = document.getElementById("results").innerHTML;
-
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>SEO Report</title>
-<link href="favicon.png" rel="shortcut icon" type="image/x-icon">
-${document.querySelector("style").outerHTML}
-</head>
-<body class="report-mode" data-theme="${document.body.dataset.theme}">
-<div class="container">
-  <h2>SEO Report</h2>
-  <div class="report-grid">
-    ${content}
-  </div>
-</div>
-</body>
-</html>`;
-}
-
-function openReport() {
-  const win = window.open("", "_blank");
-  win.document.write(buildReportHTML());
-  win.document.close();
-}
-
-function exportReportHTML() {
-  const html = buildReportHTML();
-  const blob = new Blob([html], { type: "text/html" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `seo-report-${new Date().toISOString().split("T")[0]}.html`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-/* ---------------- THEME ---------------- */
 
 function toggleTheme() {
   const body = document.body;
   const btn = document.getElementById("themeBtn");
-
   if (body.dataset.theme === "light") {
     body.dataset.theme = "dark";
     btn.textContent = "🌙 Dark";
@@ -450,13 +344,4 @@ function toggleTheme() {
 }
 </script>
 </body>
-
 </html>
-
-
-
-
-
-
-
-
