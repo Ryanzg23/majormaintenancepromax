@@ -295,12 +295,13 @@ async function runSEO() {
     <iframe src="${d.url}"></iframe>
   </div>
 
-  <table>
-    <tr><th>Title</th><td>${esc(d.title)}</td></tr>
-    <tr><th>Description</th><td>${esc(d.description)}</td></tr>
-    <tr><th>Canonical</th><td>${d.canonical||"-"}</td></tr>
-    <tr><th>AMP</th><td>${d.amphtml||"-"}</td></tr>
-  </table>
+<table>
+  <tr><th>Title</th><td>${esc(d.title)}</td></tr>
+  <tr><th>Description</th><td>${esc(d.description)}</td></tr>
+  <tr><th>Canonical</th><td>${d.canonical || "-"}</td></tr>
+  <tr><th>AMP</th><td>${d.amphtml || "-"}</td></tr>
+  <tr><th>Redirect / Final URL</th><td>${esc(d.redirectStatus)}</td></tr>
+</table>
 
   <div class="preview">
     <div>
@@ -386,3 +387,4 @@ const esc = s =>
 
 </body>
 </html>
+
