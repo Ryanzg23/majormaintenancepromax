@@ -351,13 +351,39 @@ async function runSEO() {
   for (let i = 0; i < urls.length; i++) {
     status.textContent = `Processing ${i + 1} / ${urls.length}`;
 
-    const res = await fetch("/.netlify/functions/seo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: urls[i] })
-    });
+    let d;
 
-    const d = await res.json();
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+
+      const res = await fetch("/.netlify/functions/seo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: urls[i] }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      if (!res.ok) throw new Error("Request failed");
+
+      d = await res.json();
+
+    } catch (err) {
+      // SAFETY NET — DO NOT STOP LOOP
+      d = {
+        url: urls[i],
+        finalUrl: urls[i],
+        title: "Failed to load",
+        description: "Error fetching data",
+        canonical: "-",
+        amphtml: "-",
+        redirectChain: [],
+        robots: { found: false },
+        sitemap: { found: false }
+      };
+    }
 
     results.innerHTML += `
 <div class="domain-card">
@@ -365,13 +391,13 @@ async function runSEO() {
     <h3>${esc(d.url)}</h3>
     <div>
       <button onclick="togglePreview(this)">Hide Preview</button>
-      <a class="btn" href="${d.url}" target="_blank">Visit ↗</a>
+      <a class="btn" href="${d.finalUrl || d.url}" target="_blank">Visit ↗</a>
     </div>
   </div>
 
   <div class="site-preview">
     <div class="preview-label">Site Preview</div>
-    <iframe src="${d.finalUrl}"></iframe>
+    <iframe src="${d.finalUrl || d.url}"></iframe>
   </div>
 
   <table>
@@ -381,7 +407,7 @@ async function runSEO() {
     <tr><th>AMP</th><td>${d.amphtml || "-"}</td></tr>
     <tr>
       <th>Redirect / Final URL</th>
-      <td>${formatRedirect(d.redirectChain, d.finalUrl)}</td>
+      <td>${formatRedirect(d.redirectChain, d.finalUrl || d.url)}</td>
     </tr>
   </table>
 
@@ -406,6 +432,7 @@ async function runSEO() {
   reportBtn.disabled = false;
   exportBtn.disabled = false;
 }
+
 
 /* ---------------- PREVIEW TOGGLE ---------------- */
 
@@ -475,6 +502,7 @@ function toggleTheme() {
   
 </body>
 </html>
+
 
 
 
