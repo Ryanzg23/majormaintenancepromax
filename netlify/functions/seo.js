@@ -62,15 +62,6 @@ export async function handler(event) {
         ? { found: true, content: await sitemapRes.text() }
         : { found: false };
 
-    // -------- REDIRECT STATUS OUTPUT --------
-    let redirectStatus = finalUrl;
-
-    if (redirectChain.length > 0) {
-      redirectStatus = redirectChain
-        .map(r => `${r.status} to ${r.url}`)
-        .join(" → ");
-    }
-
     return {
       statusCode: 200,
       body: JSON.stringify({
@@ -81,7 +72,8 @@ export async function handler(event) {
         amphtml,
         robots,
         sitemap,
-        redirectStatus
+        redirectChain,
+        finalUrl
       })
     };
 
