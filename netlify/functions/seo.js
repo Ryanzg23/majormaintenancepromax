@@ -3,7 +3,8 @@ export async function handler(event) {
     const { url } = JSON.parse(event.body);
     const startUrl = url.startsWith("http") ? url : `https://${url}`;
 
-    // -------- REDIRECT TRACKING --------
+    /* ---------- REDIRECT TRACKING ---------- */
+
     const redirectChain = [];
     let currentUrl = startUrl;
 
@@ -18,10 +19,7 @@ export async function handler(event) {
         if (!location) break;
 
         const nextUrl = new URL(location, currentUrl).href;
-        redirectChain.push({
-          status: res.status,
-          url: nextUrl
-        });
+        redirectChain.push({ status: res.status, url: nextUrl });
         currentUrl = nextUrl;
       } else {
         break;
@@ -30,11 +28,13 @@ export async function handler(event) {
 
     const finalUrl = currentUrl;
 
-    // -------- FETCH FINAL PAGE CONTENT --------
+    /* ---------- FETCH FINAL PAGE ---------- */
+
     const finalRes = await fetch(finalUrl);
     const html = await finalRes.text();
 
-    // -------- META PARSING --------
+    /* ---------- META ---------- */
+
     const title =
       html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] || "";
 
@@ -47,42 +47,43 @@ export async function handler(event) {
     const amphtml =
       html.match(/<link[^>]+rel=["']amphtml["'][^>]+href=["']([^"']+)/i)?.[1] || "";
 
-    // -------- ROBOTS & SITEMAP (ROOT DOMAIN) --------
+    /* ---------- ROBOTS & SITEMAP ---------- */
+
     const root = new URL(finalUrl).origin;
 
     const robotsRes = await fetch(`${root}/robots.txt`).catch(() => null);
     const robots =
       robotsRes && robotsRes.ok
-        ? { found: true, content: await robotsRes.text() }
-        : { found: false };
+        ? { found:true, content: await robotsRes.text() }
+        : { found:false };
 
     const sitemapRes = await fetch(`${root}/sitemap.xml`).catch(() => null);
     const sitemap =
       sitemapRes && sitemapRes.ok
-        ? { found: true, content: await sitemapRes.text() }
-        : { found: false };
+        ? { found:true, content: await sitemapRes.text() }
+        : { found:false };
 
     return {
-      statusCode: 200,
-      body: JSON.stringify({
-        url: startUrl,
+      statusCode:200,
+      body:JSON.stringify({
+        url:startUrl,
+        finalUrl,
+        redirectChain,
         title,
         description,
         canonical,
         amphtml,
         robots,
-        sitemap,
-        redirectChain,
-        finalUrl
+        sitemap
       })
     };
 
   } catch (err) {
     return {
-      statusCode: 500,
-      body: JSON.stringify({
-        error: true,
-        message: err.message || "Unknown error"
+      statusCode:500,
+      body:JSON.stringify({
+        error:true,
+        message:err.message || "Unknown error"
       })
     };
   }
