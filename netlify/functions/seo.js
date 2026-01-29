@@ -3,17 +3,18 @@ export async function handler(event) {
     let { url } = JSON.parse(event.body || "{}");
     if (!url) return json({ error: "URL required" }, 400);
 
+    // Normalize URL
     if (!/^https?:\/\//i.test(url)) url = "https://" + url;
 
-    let res;
+    let pageRes;
     try {
-      res = await fetch(url, ua());
+      pageRes = await fetch(url, ua());
     } catch {
       url = url.replace(/^https:\/\//, "http://");
-      res = await fetch(url, ua());
+      pageRes = await fetch(url, ua());
     }
 
-    const html = await res.text();
+    const html = await pageRes.text();
 
     const head = (html.match(/<head[^>]*>([\s\S]*?)<\/head>/i) || [,""])[1];
     const ex = r => (head.match(r) || [,""])[1].trim();
@@ -25,9 +26,11 @@ export async function handler(event) {
     const canonical = ex(/<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i);
     const amphtml = ex(/<link[^>]+rel=["']amphtml["'][^>]*href=["']([^"']+)["']/i);
 
-    const base = url.replace(/\/$/, "");
-    const robots = await fetchFile(base + "/robots.txt");
-    const sitemap = await fetchFile(base + "/sitemap.xml");
+    // ✅ ROOT DOMAIN ONLY
+    const origin = new URL(url).origin;
+
+    const robots = await fetchSpecialFile(origin + "/robots.txt");
+    const sitemap = await fetchSpecialFile(origin + "/sitemap.xml");
 
     return json({
       url,
@@ -44,20 +47,50 @@ export async function handler(event) {
   }
 }
 
-async function fetchFile(fileUrl) {
+/* ===================== */
+/* HELPERS               */
+/* ===================== */
+
+async function fetchSpecialFile(fileUrl) {
   try {
-    const r = await fetch(fileUrl, ua());
-    if (!r.ok) return { status: r.status, content: "" };
-    const t = await r.text();
-    return { status: r.status, content: t.slice(0, 2000) };
+    const res = await fetch(fileUrl, ua());
+    const type = res.headers.get("content-type") || "";
+    const text = await res.text();
+
+    // ❌ Fake robots/sitemap (HTML page)
+    if (
+      !res.ok ||
+      type.includes("text/html") ||
+      /<html/i.test(text) ||
+      /<title/i.test(text)
+    ) {
+      return {
+        status: 404,
+        found: false,
+        content: "Not found"
+      };
+    }
+
+    return {
+      status: res.status,
+      found: true,
+      content: text.slice(0, 2000)
+    };
+
   } catch {
-    return { status: 0, content: "" };
+    return {
+      status: 404,
+      found: false,
+      content: "Not found"
+    };
   }
 }
 
 const ua = () => ({
   redirect: "follow",
-  headers: { "User-Agent": "SEO-Bulk-Checker/1.0" }
+  headers: {
+    "User-Agent": "MajorMaintenanceProMax/1.0"
+  }
 });
 
 function json(body, status = 200) {
