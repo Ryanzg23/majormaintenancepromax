@@ -44,7 +44,7 @@ body {
   padding:16px;
 }
 
-/* Exported report width */
+/* EXPORT REPORT WIDTH */
 .report-mode .container {
   max-width:1400px;
 }
@@ -199,13 +199,18 @@ th { background:rgba(0,0,0,.05); }
   word-break:break-word;
 }
 
-.status {
-  margin-top:10px;
-  font-size:13px;
-  opacity:.7;
+/* REPORT GRID (2 COLUMNS) */
+.report-grid {
+  display:flex;
+  flex-wrap:wrap;
+  gap:16px;
 }
 
-/* Export-only: hide buttons */
+.report-grid .domain-card {
+  width:calc(50% - 8px);
+}
+
+/* EXPORT MODE — REMOVE BUTTONS */
 .report-mode button,
 .report-mode a.btn {
   display:none !important;
@@ -213,6 +218,7 @@ th { background:rgba(0,0,0,.05); }
 
 @media (max-width:900px) {
   .preview { grid-template-columns:1fr; }
+  .report-grid .domain-card { width:100%; }
 }
 </style>
 </head>
@@ -343,7 +349,9 @@ ${document.querySelector("style").outerHTML}
 <body class="report-mode" data-theme="${document.body.dataset.theme}">
 <div class="container">
   <h2>SEO Report</h2>
-  ${content}
+  <div class="report-grid">
+    ${content}
+  </div>
 </div>
 </body>
 </html>
