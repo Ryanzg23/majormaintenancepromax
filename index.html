@@ -1,125 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAJOR MAINTENANCE PRO MAX</title>
 <link href="favicon.png" rel="shortcut icon" type="image/x-icon">
 
 <style>
-:root{
+* { box-sizing:border-box; }
+
+:root {
   --bg:#f5f5f5;
-  --card:#fff;
   --text:#111;
+  --card:#ffffff;
   --btn:#2563eb;
+  --btn-text:#ffffff;
   --border:#ddd;
-  --code:#0f172a;
-  --codeText:#e5e7eb;
+  --code-bg:#0f172a;
+  --code-text:#e5e7eb;
 }
-[data-theme="dark"]{
-  --bg:#020617;
-  --card:#020617;
+
+[data-theme="dark"] {
+  --bg:#0b1020;
   --text:#e5e7eb;
+  --card:#020617;
   --btn:#38bdf8;
+  --btn-text:#020617;
   --border:#1e293b;
-  --code:#020617;
+  --code-bg:#020617;
+  --code-text:#e5e7eb;
 }
-*{box-sizing:border-box}
-body{
+
+body {
   margin:0;
   font-family:system-ui,sans-serif;
   background:var(--bg);
   color:var(--text);
 }
-.container{max-width:1200px;margin:auto;padding:16px}
-header{display:flex;justify-content:space-between;align-items:center}
-textarea{
+
+.container {
+  max-width:1200px;
+  margin:auto;
+  padding:16px;
+}
+
+.report-mode .container {
+  max-width:1400px;
+}
+
+header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+h1 { margin:0; font-size:20px; }
+
+textarea {
   width:100%;
   min-height:160px;
   padding:12px;
   border-radius:8px;
   border:1px solid var(--border);
+  resize:vertical;
 }
-button,a.btn{
-  background:var(--btn);
-  color:#fff;
+
+button, a.btn {
+  padding:10px 14px;
   border:none;
   border-radius:8px;
-  padding:10px 14px;
-  font-weight:600;
   cursor:pointer;
+  background:var(--btn);
+  color:var(--btn-text);
+  font-weight:600;
+  font-size:13px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  transition:.15s;
 }
-.actions{
+
+button:hover:not(:disabled),
+a.btn:hover {
+  transform:translateY(-1px);
+  box-shadow:0 6px 18px rgba(0,0,0,.2);
+}
+
+button:disabled {
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.card {
+  background:var(--card);
+  padding:15px;
+  border-radius:12px;
+  margin-top:15px;
+}
+
+.actions {
   display:flex;
-  gap:10px;
   flex-wrap:wrap;
+  gap:10px;
   margin-top:10px;
 }
-.actions button{flex:1 1 200px}
-.card{
-  background:var(--card);
-  padding:16px;
-  border-radius:12px;
-}
-#results{margin-top:20px}
-.domain-card{
+
+.actions button { flex:1 1 220px; }
+
+#results { margin-top:28px; }
+
+.domain-card {
   background:var(--card);
   border:1px solid var(--border);
-  border-radius:12px;
+  border-radius:14px;
   padding:16px;
   margin-top:20px;
 }
-.domain-header{
+
+.domain-header {
   display:flex;
   justify-content:space-between;
   align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
 }
-.site-preview{
+
+.domain-header h3 {
+  margin:0;
+  font-size:16px;
+  word-break:break-all;
+}
+
+.site-preview {
   position:relative;
   margin:12px 0;
 }
-.site-preview iframe{
+
+.site-preview iframe {
   width:100%;
   height:260px;
-  border-radius:8px;
   border:1px solid var(--border);
+  border-radius:10px;
 }
-.preview-label{
+
+.preview-label {
   position:absolute;
   top:8px;
   left:8px;
-  background:#000;
+  background:rgba(0,0,0,.75);
   color:#fff;
-  padding:4px 8px;
-  border-radius:6px;
   font-size:12px;
+  padding:5px 10px;
+  border-radius:6px;
 }
-table{
+
+table {
   width:100%;
   border-collapse:collapse;
   font-size:12px;
+  margin-bottom:12px;
 }
-th,td{
+
+th, td {
   border:1px solid var(--border);
   padding:6px;
 }
-.preview{
+
+th { background:rgba(0,0,0,.05); }
+
+.preview {
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:12px;
+  gap:14px;
   margin-top:10px;
 }
-.code-block{
-  background:var(--code);
-  color:var(--codeText);
+
+.preview > div {
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+
+.code-block {
+  background:var(--code-bg);
+  color:var(--code-text);
   padding:10px;
   border-radius:8px;
   font-size:11px;
   max-height:220px;
   overflow:auto;
+  white-space:pre-wrap;
+  word-break:break-word;
 }
-@media(max-width:800px){
-  .preview{grid-template-columns:1fr}
+
+/* REPORT GRID */
+.report-grid {
+  display:flex;
+  flex-wrap:wrap;
+  gap:16px;
+}
+.report-grid .domain-card {
+  width:calc(50% - 8px);
+}
+
+/* HIDE BUTTONS IN REPORT */
+.report-mode button,
+.report-mode a.btn {
+  display:none !important;
+}
+
+@media (max-width:900px) {
+  .preview { grid-template-columns:1fr; }
+  .report-grid .domain-card { width:100%; }
 }
 </style>
 </head>
@@ -133,7 +228,7 @@ th,td{
 </header>
 
 <div class="card">
-<textarea id="urls" placeholder="One URL per line"></textarea>
+<textarea id="urls" placeholder="One domain or URL per line"></textarea>
 
 <div class="actions">
   <button onclick="ampTestAll()">AMP TEST ALL</button>
@@ -153,28 +248,58 @@ th,td{
 </div>
 
 <script>
-const getUrls=()=>urls.value.split("\n").map(u=>u.trim()).filter(Boolean);
-const esc=s=>(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));
+/* ---------- HELPERS ---------- */
+const getUrls = () =>
+  document.getElementById("urls").value.split("\n").map(u=>u.trim()).filter(Boolean);
 
-function ampTestAll(){getUrls().forEach(u=>window.open(`https://search.google.com/test/amp?url=${u}`))}
-function pageSpeedAll(){getUrls().forEach(u=>window.open(`https://pagespeed.web.dev/report?url=${u}`))}
-function scanAll(){getUrls().forEach(u=>window.open(`https://sitecheck.sucuri.net/results/${u}`))}
-function cssCheckAll(){getUrls().forEach(u=>window.open(`https://jigsaw.w3.org/css-validator/validator?uri=${u}`))}
+const openWithDelay = (urls, fn, delay=700) =>
+  urls.forEach((u,i)=>setTimeout(()=>window.open(fn(u),"_blank"),i*delay));
 
-async function runSEO(){
-  results.innerHTML="";
-  reportBtn.disabled=true;
-  exportBtn.disabled=true;
-  const urls=getUrls();
-  for(let i=0;i<urls.length;i++){
-    status.textContent=`Processing ${i+1}/${urls.length}`;
-    const res=await fetch("/.netlify/functions/seo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:urls[i]})});
-    const d=await res.json();
+const esc = s =>
+  (s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 
-    results.innerHTML+=`
+/* ---------- BULK TOOLS ---------- */
+function ampTestAll(){openWithDelay(getUrls(),u=>`https://search.google.com/test/amp?url=${encodeURIComponent(u)}`)}
+function pageSpeedAll(){openWithDelay(getUrls(),u=>`https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`)}
+function scanAll(){openWithDelay(getUrls(),u=>`https://sitecheck.sucuri.net/results/${encodeURIComponent(u)}`)}
+function cssCheckAll(){openWithDelay(getUrls(),u=>`https://jigsaw.w3.org/css-validator/validator?uri=${encodeURIComponent(u)}`)}
+
+/* ---------- REDIRECT FORMAT ---------- */
+function formatRedirect(chain, finalUrl) {
+  const normalize = u => u.replace(/^https?:\/\//,"").replace(/^www\./,"").split("/")[0];
+  if (!chain || chain.length === 0) return `<strong>${finalUrl}</strong>`;
+  const finalDomain = normalize(finalUrl);
+  const same = chain.every(r=>normalize(r.url)===finalDomain);
+  if (same) return `<strong>${finalUrl}</strong>`;
+  if (chain.length === 1) return `301 to <strong>${finalUrl}</strong>`;
+  return `301 to ${chain.slice(0,-1).map(r=>r.url).join(" → ")} → <strong>${finalUrl}</strong>`;
+}
+
+/* ---------- MAIN ---------- */
+async function runSEO() {
+  const urls = getUrls();
+  const results = document.getElementById("results");
+  const status = document.getElementById("status");
+
+  results.innerHTML = "";
+  reportBtn.disabled = true;
+  exportBtn.disabled = true;
+
+  for (let i=0;i<urls.length;i++) {
+    status.textContent = `Processing ${i+1} / ${urls.length}`;
+
+    const res = await fetch("/.netlify/functions/seo", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ url: urls[i] })
+    });
+
+    const d = await res.json();
+
+    results.innerHTML += `
 <div class="domain-card">
   <div class="domain-header">
-    <strong>${esc(d.url)}</strong>
+    <h3>${esc(d.url)}</h3>
     <div>
       <button onclick="togglePreview(this)">Hide Preview</button>
       <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
@@ -191,47 +316,82 @@ async function runSEO(){
     <tr><th>Description</th><td>${esc(d.description)}</td></tr>
     <tr><th>Canonical</th><td>${d.canonical||"-"}</td></tr>
     <tr><th>AMP</th><td>${d.amphtml||"-"}</td></tr>
+    <tr><th>Redirect / Final URL</th><td>${formatRedirect(d.redirectChain,d.finalUrl)}</td></tr>
   </table>
 
   <div class="preview">
     <div>
       <strong>Robots.txt</strong>
-      <div class="code-block">${d.robots?.found?esc(d.robots.content):"robots.txt not found"}</div>
+      <div class="code-block">${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}</div>
     </div>
     <div>
       <strong>Sitemap.xml</strong>
-      <div class="code-block">${d.sitemap?.found?esc(d.sitemap.content):"sitemap.xml not found"}</div>
+      <div class="code-block">${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}</div>
     </div>
   </div>
 </div>`;
   }
-  status.textContent="Done.";
-  reportBtn.disabled=false;
-  exportBtn.disabled=false;
+
+  status.textContent = "Done.";
+  reportBtn.disabled = false;
+  exportBtn.disabled = false;
 }
 
-function togglePreview(btn){
-  const p=btn.closest(".domain-card").querySelector(".site-preview");
-  p.style.display=p.style.display==="none"?"":"none";
-  btn.textContent=p.style.display==="none"?"Show Preview":"Hide Preview";
+/* ---------- TOGGLES ---------- */
+function togglePreview(btn) {
+  const box = btn.closest(".domain-card").querySelector(".site-preview");
+  const hidden = box.style.display === "none";
+  box.style.display = hidden ? "" : "none";
+  btn.textContent = hidden ? "Hide Preview" : "Show Preview";
 }
 
-function toggleTheme(){
-  document.body.dataset.theme=document.body.dataset.theme==="light"?"dark":"light";
-  themeBtn.textContent=document.body.dataset.theme==="light"?"☀️ Light":"🌙 Dark";
+function toggleTheme() {
+  const body = document.body;
+  const btn = document.getElementById("themeBtn");
+  if (body.dataset.theme === "light") {
+    body.dataset.theme = "dark";
+    btn.textContent = "🌙 Dark";
+  } else {
+    body.dataset.theme = "light";
+    btn.textContent = "☀️ Light";
+  }
 }
 
-function buildReportHTML(){
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SEO Report</title>${document.querySelector("style").outerHTML}</head>
-<body><div class="container"><h2>SEO Report</h2>${results.innerHTML}</div></body></html>`;
+/* ---------- REPORT ---------- */
+function buildReportHTML() {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SEO Report</title>
+<link href="favicon.png" rel="shortcut icon" type="image/x-icon">
+${document.querySelector("style").outerHTML}
+</head>
+<body class="report-mode" data-theme="${document.body.dataset.theme}">
+<div class="container">
+  <h2>SEO Report</h2>
+  <div class="report-grid">
+    ${document.getElementById("results").innerHTML}
+  </div>
+</div>
+</body>
+</html>`;
 }
-function openReport(){const w=window.open("");w.document.write(buildReportHTML());w.document.close();}
-function exportReportHTML(){
-  const blob=new Blob([buildReportHTML()],{type:"text/html"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="seo-report.html";
+
+function openReport() {
+  const win = window.open("", "_blank");
+  win.document.write(buildReportHTML());
+  win.document.close();
+}
+
+function exportReportHTML() {
+  const blob = new Blob([buildReportHTML()], { type:"text/html" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `seo-report-${new Date().toISOString().split("T")[0]}.html`;
   a.click();
+  URL.revokeObjectURL(a.href);
 }
 </script>
 </body>
