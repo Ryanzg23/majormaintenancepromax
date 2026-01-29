@@ -3,7 +3,7 @@ export async function handler(event) {
     const { url } = JSON.parse(event.body);
     const startUrl = url.startsWith("http") ? url : `https://${url}`;
 
-    /* ---------------- REDIRECT TRACKING ---------------- */
+    /* ---------- REDIRECT TRACKING ---------- */
 
     const redirectChain = [];
     let currentUrl = startUrl;
@@ -28,12 +28,12 @@ export async function handler(event) {
 
     const finalUrl = currentUrl;
 
-    /* ---------------- FETCH FINAL HTML ---------------- */
+    /* ---------- FETCH FINAL PAGE ---------- */
 
     const finalRes = await fetch(finalUrl);
     const html = await finalRes.text();
 
-    /* ---------------- META ---------------- */
+    /* ---------- META PARSING ---------- */
 
     const title =
       html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] || "";
@@ -47,7 +47,7 @@ export async function handler(event) {
     const amphtml =
       html.match(/<link[^>]+rel=["']amphtml["'][^>]+href=["']([^"']+)/i)?.[1] || "";
 
-    /* ---------------- ROBOTS & SITEMAP ---------------- */
+    /* ---------- ROBOTS & SITEMAP ---------- */
 
     const root = new URL(finalUrl).origin;
 
@@ -62,8 +62,6 @@ export async function handler(event) {
       sitemapRes && sitemapRes.ok
         ? { found: true, content: await sitemapRes.text() }
         : { found: false };
-
-    /* ---------------- RESPONSE ---------------- */
 
     return {
       statusCode: 200,
