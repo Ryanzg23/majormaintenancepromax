@@ -305,40 +305,26 @@ function normalizeDomain(url) {
     .split("/")[0];
 }
 
-
 function isCrossDomainRedirect(chain, finalUrl, originalUrl) {
-  const baseDomain = normalizeDomain(originalUrl);
-  const finalDomain = normalizeDomain(finalUrl);
-
-  // If final domain is missing, assume NOT cross-domain
-  if (!finalDomain || !baseDomain) return false;
-
-  // Final URL is a different domain
-  if (baseDomain !== finalDomain) return true;
-
-  // Any intermediate redirect is different
+  const base = normalizeDomain(originalUrl);
+  const finalD = normalizeDomain(finalUrl);
+  if (!base || !finalD) return false;
+  if (base !== finalD) return true;
   if (Array.isArray(chain)) {
-    return chain.some(r => normalizeDomain(r.url) && normalizeDomain(r.url) !== baseDomain);
+    return chain.some(r => normalizeDomain(r.url) && normalizeDomain(r.url) !== base);
   }
-
   return false;
 }
 
-
-
 function formatRedirect(chain, finalUrl, originalUrl) {
   if (!finalUrl) return "-";
-
-  const isCross = isCrossDomainRedirect(chain, finalUrl, originalUrl);
-
-  if (!chain || chain.length === 0 || !isCross) {
+  const cross = isCrossDomainRedirect(chain, finalUrl, originalUrl);
+  if (!chain || chain.length === 0 || !cross) {
     return `<strong>${finalUrl}</strong>`;
   }
-
   if (chain.length === 1) {
     return `301 to <strong>${finalUrl}</strong>`;
   }
-
   return `301 to ${chain
     .filter(r => r && r.url)
     .slice(0, -1)
@@ -366,69 +352,116 @@ async function runSEO() {
     });
 
     const d = await res.json();
-    const cross = isCrossDomainRedirect(d.redirectChain, d.finalUrl, d.url);
 
+    const is404 =
+      d.finalStatus === 404 ||
+      /page not found|404|not exist/i.test(d.title || "");
+
+    const cross = isCrossDomainRedirect(
+      d.redirectChain,
+      d.finalUrl,
+      d.url
+    );
+
+    /* ---------- 404 PAGE ---------- */
+    if (is404) {
+      results.innerHTML += `
+<div class="domain-card">
+  <div class="domain-header">
+    <h3>${esc(d.url)}</h3>
+    <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
+  </div>
+
+  <div class="redirect-only">
+    <div class="redirect-status">⚠ Page Not Found (404)</div>
+    <div class="redirect-note">
+      This URL returns a 404 page, but the domain is reachable.
+    </div>
+    <div style="margin-top:8px;font-size:12px;">
+      Final URL: <strong>${esc(d.finalUrl)}</strong>
+    </div>
+  </div>
+
+  <div class="preview">
+    <div>
+      <strong>Robots.txt</strong>
+      <div class="code-block">
+        ${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}
+      </div>
+    </div>
+    <div>
+      <strong>Sitemap.xml</strong>
+      <div class="code-block">
+        ${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}
+      </div>
+    </div>
+  </div>
+</div>`;
+      continue;
+    }
+
+    /* ---------- CROSS-DOMAIN 301 ---------- */
+    if (cross) {
+      results.innerHTML += `
+<div class="domain-card">
+  <div class="domain-header">
+    <h3>${esc(d.url)}</h3>
+    <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
+  </div>
+
+  <div class="redirect-only">
+    <div class="redirect-status">
+      ${formatRedirect(d.redirectChain, d.finalUrl, d.url)}
+    </div>
+    <div class="redirect-note">
+      This domain permanently redirects to another domain.
+    </div>
+  </div>
+</div>`;
+      continue;
+    }
+
+    /* ---------- NORMAL PAGE ---------- */
     results.innerHTML += `
 <div class="domain-card">
   <div class="domain-header">
     <h3>${esc(d.url)}</h3>
-    ${
-      cross
-        ? `<a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>`
-        : `
-          <div>
-            <button onclick="togglePreview(this)">Hide Preview</button>
-            <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
-          </div>
-        `
-    }
+    <div>
+      <button onclick="togglePreview(this)">Show Preview</button>
+      <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
+    </div>
   </div>
 
-  ${
-    cross
-      ? `
-        <div class="redirect-only">
-          <div class="redirect-status">
-            ${formatRedirect(d.redirectChain, d.finalUrl, d.url)}
-          </div>
-          <div class="redirect-note">
-            This domain permanently redirects to another domain.
-          </div>
-        </div>
-      `
-      : `
-        <div class="site-preview">
-          <div class="preview-label">Site Preview</div>
-          <iframe src="${d.finalUrl}"></iframe>
-        </div>
+  <div class="site-preview" style="display:none">
+    <div class="preview-label">Site Preview</div>
+    <iframe data-src="${d.finalUrl}"></iframe>
+  </div>
 
-        <table>
-          <tr><th>Title</th><td>${esc(d.title)}</td></tr>
-          <tr><th>Description</th><td>${esc(d.description)}</td></tr>
-          <tr><th>Canonical</th><td>${d.canonical || "-"}</td></tr>
-          <tr><th>AMP</th><td>${d.amphtml || "-"}</td></tr>
-          <tr>
-            <th>Redirect / Final URL</th>
-            <td>${formatRedirect(d.redirectChain, d.finalUrl, d.url)}</td>
-          </tr>
-        </table>
+  <table>
+    <tr><th>Title</th><td>${esc(d.title)}</td></tr>
+    <tr><th>Description</th><td>${esc(d.description)}</td></tr>
+    <tr><th>Canonical</th><td>${d.canonical || "-"}</td></tr>
+    <tr><th>AMP</th><td>${d.amphtml || "-"}</td></tr>
+    <tr>
+      <th>Redirect / Final URL</th>
+      <td>${formatRedirect(d.redirectChain, d.finalUrl, d.url)}</td>
+    </tr>
+  </table>
 
-        <div class="preview">
-          <div>
-            <strong>Robots.txt</strong>
-            <div class="code-block">
-              ${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}
-            </div>
-          </div>
-          <div>
-            <strong>Sitemap.xml</strong>
-            <div class="code-block">
-              ${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}
-            </div>
-          </div>
-        </div>
-      `
-  }
+  <div class="preview">
+    <div>
+      <strong>Robots.txt</strong>
+      <div class="code-block">
+        ${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}
+      </div>
+    </div>
+    <div>
+      <strong>Sitemap.xml</strong>
+      <div class="code-block">
+        ${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}
+      </div>
+    </div>
+  </div>
 </div>`;
   }
 
@@ -439,10 +472,19 @@ async function runSEO() {
 
 /* ---------- UI ---------- */
 function togglePreview(btn) {
-  const preview = btn.closest(".domain-card").querySelector(".site-preview");
+  const card = btn.closest(".domain-card");
+  const preview = card.querySelector(".site-preview");
+  const iframe = preview.querySelector("iframe");
   const hidden = preview.style.display === "none";
-  preview.style.display = hidden ? "" : "none";
-  btn.textContent = hidden ? "Hide Preview" : "Show Preview";
+
+  if (hidden) {
+    if (!iframe.src) iframe.src = iframe.dataset.src;
+    preview.style.display = "";
+    btn.textContent = "Hide Preview";
+  } else {
+    preview.style.display = "none";
+    btn.textContent = "Show Preview";
+  }
 }
 
 function toggleTheme() {
@@ -497,6 +539,7 @@ function exportReportHTML() {
 </body>
 
 </html>
+
 
 
 
