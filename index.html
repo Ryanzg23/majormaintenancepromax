@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="favicon.png" rel="shortcut icon" type="image/x-icon">
 <title>MAJOR MAINTENANCE PRO MAX</title>
+<link href="favicon.png" rel="shortcut icon" type="image/x-icon">
 
 <style>
 * { box-sizing:border-box; }
@@ -44,7 +44,7 @@ body {
   padding:16px;
 }
 
-/* REPORT PAGE WIDTH */
+/* Report page width */
 .report-mode .container {
   max-width:1400px;
 }
@@ -53,13 +53,12 @@ header {
   display:flex;
   justify-content:space-between;
   align-items:center;
-  flex-wrap:wrap;
   gap:10px;
+  flex-wrap:wrap;
 }
 
 h1 { margin:0; font-size:20px; }
 
-/* INPUT */
 textarea {
   width:100%;
   min-height:160px;
@@ -69,7 +68,6 @@ textarea {
   resize:vertical;
 }
 
-/* BUTTONS */
 button, a.btn {
   padding:10px 14px;
   border:none;
@@ -113,21 +111,18 @@ button:disabled {
 
 .actions button { flex:1 1 220px; }
 
-/* RESULTS SPACING */
 #results {
   margin-top:28px;
 }
 
-/* DOMAIN CARD */
 .domain-card {
   background:var(--card);
   border:1px solid var(--border);
   border-radius:14px;
   padding:16px;
-  margin-top: 20px;
+  margin-top:20px;
 }
 
-/* HEADER INSIDE DOMAIN */
 .domain-header {
   display:flex;
   justify-content:space-between;
@@ -142,7 +137,6 @@ button:disabled {
   word-break:break-all;
 }
 
-/* SITE PREVIEW */
 .site-preview {
   position:relative;
   margin:12px 0;
@@ -166,7 +160,6 @@ button:disabled {
   border-radius:6px;
 }
 
-/* META TABLE */
 table {
   width:100%;
   border-collapse:collapse;
@@ -181,7 +174,6 @@ th, td {
 
 th { background:rgba(0,0,0,.05); }
 
-/* ROBOTS / SITEMAP */
 .preview {
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -189,7 +181,6 @@ th { background:rgba(0,0,0,.05); }
   margin-top:10px;
 }
 
-/* Each column becomes its own container */
 .preview > div {
   display:flex;
   flex-direction:column;
@@ -208,11 +199,14 @@ th { background:rgba(0,0,0,.05); }
   word-break:break-word;
 }
 
-/* REPORT PAGE */
+.status {
+  margin-top:10px;
+  font-size:13px;
+  opacity:.7;
+}
+
+/* REPORT */
 .report-toolbar {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
   margin-bottom:16px;
 }
 
@@ -226,13 +220,12 @@ th { background:rgba(0,0,0,.05); }
   width:calc(50% - 8px);
 }
 
-/* REPORT-ONLY OVERRIDES */
+/* Report-only: hide buttons */
 .report-mode button,
 .report-mode a.btn {
   display:none !important;
 }
 
-/* SCREENSHOT HELPER */
 .screenshot-helper {
   font-size:14px;
   background:#f1f5f9;
@@ -254,7 +247,7 @@ th { background:rgba(0,0,0,.05); }
 
 <header>
   <h1>MAJOR MAINTENANCE PRO MAX</h1>
-  <button onclick="toggleTheme()" id="themeBtn">☀️ Light</button>
+  <button id="themeBtn" onclick="toggleTheme()">☀️ Light</button>
 </header>
 
 <div class="card">
@@ -267,9 +260,10 @@ th { background:rgba(0,0,0,.05); }
   <button onclick="cssCheckAll()">CHECK ALL CSS</button>
   <button onclick="runSEO()">GENERATE META + ROBOTS</button>
   <button id="reportBtn" onclick="openReport()" disabled>OPEN REPORT PAGE</button>
+  <button id="exportBtn" onclick="exportReportHTML()" disabled>EXPORT REPORT (HTML)</button>
 </div>
 
-<div id="status"></div>
+<div class="status" id="status"></div>
 </div>
 
 <div id="results"></div>
@@ -278,8 +272,7 @@ th { background:rgba(0,0,0,.05); }
 
 <script>
 const getUrls = () =>
-  document.getElementById("urls").value
-    .split("\n").map(u=>u.trim()).filter(Boolean);
+  document.getElementById("urls").value.split("\n").map(u=>u.trim()).filter(Boolean);
 
 const openWithDelay = (urls, builder, delay=700) =>
   urls.forEach((u,i)=>setTimeout(()=>window.open(builder(u),"_blank"),i*delay));
@@ -293,10 +286,10 @@ async function runSEO() {
   const urls = getUrls();
   const results = document.getElementById("results");
   const status = document.getElementById("status");
-  const reportBtn = document.getElementById("reportBtn");
 
+  document.getElementById("reportBtn").disabled = true;
+  document.getElementById("exportBtn").disabled = true;
   results.innerHTML = "";
-  reportBtn.disabled = true;
 
   for (let i=0;i<urls.length;i++) {
     status.textContent = `Processing ${i+1} / ${urls.length}`;
@@ -306,6 +299,7 @@ async function runSEO() {
       headers:{ "Content-Type":"application/json" },
       body:JSON.stringify({ url: urls[i] })
     });
+
     const d = await res.json();
 
     results.innerHTML += `
@@ -344,29 +338,40 @@ async function runSEO() {
   }
 
   status.textContent = "Done.";
-  reportBtn.disabled = false;
+  document.getElementById("reportBtn").disabled = false;
+  document.getElementById("exportBtn").disabled = false;
 }
 
 function togglePreview(btn) {
   const preview = btn.closest(".domain-card").querySelector(".site-preview");
-  if (preview.style.display === "none") {
-    preview.style.display = "";
-    btn.textContent = "Hide Preview";
-  } else {
-    preview.style.display = "none";
-    btn.textContent = "Show Preview";
-  }
+  preview.style.display = preview.style.display === "none" ? "" : "none";
+  btn.textContent = preview.style.display === "none" ? "Show Preview" : "Hide Preview";
 }
 
 function openReport() {
+  openReportWindow(false);
+}
+
+function exportReportHTML() {
+  const html = openReportWindow(true);
+  const blob = new Blob([html], { type:"text/html" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `seo-report-${new Date().toISOString().split("T")[0]}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function openReportWindow(returnHTML) {
   const content = document.getElementById("results").innerHTML;
 
-  const win = window.open("", "_blank");
-  win.document.write(`
+  const html = `
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <title>SEO Report</title>
+<link href="favicon.png" rel="shortcut icon" type="image/x-icon">
 ${document.querySelector("style").outerHTML}
 </head>
 <body class="report-mode" data-theme="${document.body.dataset.theme}">
@@ -378,7 +383,7 @@ ${document.querySelector("style").outerHTML}
   <div class="screenshot-helper">
     📸 <strong>Screenshot full page for report:</strong><br>
     Open the site preview above in a new tab and use your screenshot extension
-    (e.g. ShareX, GoFullPage, Nimbus, Awesome Screenshot) to capture the full page.
+    (GoFullPage, Nimbus, Awesome Screenshot).
   </div>
 
   <div class="report-grid">
@@ -387,7 +392,12 @@ ${document.querySelector("style").outerHTML}
 </div>
 </body>
 </html>
-`);
+`;
+
+  if (returnHTML) return html;
+
+  const win = window.open("", "_blank");
+  win.document.write(html);
   win.document.close();
 }
 
@@ -412,5 +422,3 @@ const esc = s =>
 
 </body>
 </html>
-
-
