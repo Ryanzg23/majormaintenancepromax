@@ -298,40 +298,49 @@ function cssCheckAll() {
 
 /* ---------- REDIRECT HELPERS ---------- */
 function normalizeDomain(url) {
+  if (!url || typeof url !== "string") return "";
   return url
     .replace(/^https?:\/\//, "")
     .replace(/^www\./, "")
     .split("/")[0];
 }
 
+
 function isCrossDomainRedirect(chain, finalUrl, originalUrl) {
-  const normalize = u =>
-    u.replace(/^https?:\/\//, "")
-     .replace(/^www\./, "")
-     .split("/")[0];
+  const baseDomain = normalizeDomain(originalUrl);
+  const finalDomain = normalizeDomain(finalUrl);
 
-  const baseDomain = normalize(originalUrl);
-  const finalDomain = normalize(finalUrl);
+  // If final domain is missing, assume NOT cross-domain
+  if (!finalDomain || !baseDomain) return false;
 
-  // Final domain is different from original
+  // Final URL is a different domain
   if (baseDomain !== finalDomain) return true;
 
   // Any intermediate redirect is different
-  return chain && chain.some(r => normalize(r.url) !== baseDomain);
+  if (Array.isArray(chain)) {
+    return chain.some(r => normalizeDomain(r.url) && normalizeDomain(r.url) !== baseDomain);
+  }
+
+  return false;
 }
 
 
-function formatRedirect(chain, finalUrl) {
-  if (!chain || chain.length === 0) {
+
+function formatRedirect(chain, finalUrl, originalUrl) {
+  if (!finalUrl) return "-";
+
+  const isCross = isCrossDomainRedirect(chain, finalUrl, originalUrl);
+
+  if (!chain || chain.length === 0 || !isCross) {
     return `<strong>${finalUrl}</strong>`;
   }
-  if (!isCrossDomainRedirect(chain, finalUrl)) {
-    return `<strong>${finalUrl}</strong>`;
-  }
+
   if (chain.length === 1) {
     return `301 to <strong>${finalUrl}</strong>`;
   }
+
   return `301 to ${chain
+    .filter(r => r && r.url)
     .slice(0, -1)
     .map(r => r.url)
     .join(" → ")} → <strong>${finalUrl}</strong>`;
@@ -380,7 +389,7 @@ async function runSEO() {
       ? `
         <div class="redirect-only">
           <div class="redirect-status">
-            ${formatRedirect(d.redirectChain, d.finalUrl)}
+            ${formatRedirect(d.redirectChain, d.finalUrl, d.url)}
           </div>
           <div class="redirect-note">
             This domain permanently redirects to another domain.
@@ -400,7 +409,7 @@ async function runSEO() {
           <tr><th>AMP</th><td>${d.amphtml || "-"}</td></tr>
           <tr>
             <th>Redirect / Final URL</th>
-            <td>${formatRedirect(d.redirectChain, d.finalUrl)}</td>
+            <td>${formatRedirect(d.redirectChain, d.finalUrl, d.url)}</td>
           </tr>
         </table>
 
@@ -488,6 +497,7 @@ function exportReportHTML() {
 </body>
 
 </html>
+
 
 
 
