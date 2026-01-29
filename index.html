@@ -93,6 +93,20 @@ a.btn {
   gap:6px;
   text-decoration:none;
   font-size:13px;
+  transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+button:hover,
+a.btn:hover {
+  transform:translateY(-1px);
+  box-shadow:0 6px 18px rgba(0,0,0,.2);
+  filter:brightness(1.05);
+}
+
+button:active,
+a.btn:active {
+  transform:translateY(0);
+  box-shadow:0 3px 10px rgba(0,0,0,.15);
 }
 
 /* CARD */
@@ -110,9 +124,7 @@ a.btn {
   margin-top:10px;
 }
 
-.actions button {
-  flex:1 1 220px;
-}
+.actions button { flex:1 1 220px; }
 
 /* DOMAIN CARD */
 .domain-card {
@@ -131,7 +143,7 @@ a.btn {
   justify-content:space-between;
   align-items:center;
   gap:10px;
-  margin-bottom:12px;
+  margin-bottom:10px;
   flex-wrap:wrap;
 }
 
@@ -141,9 +153,17 @@ a.btn {
   word-break:break-all;
 }
 
+.domain-actions {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
 /* SITE PREVIEW */
 .site-preview {
-  margin-bottom:14px;
+  display:none;
+  margin:12px 0;
+  position:relative;
 }
 
 .site-preview iframe {
@@ -152,6 +172,20 @@ a.btn {
   border:1px solid var(--border);
   border-radius:10px;
   background:#fff;
+}
+
+/* PREVIEW LABEL */
+.preview-label {
+  position:absolute;
+  top:8px;
+  left:8px;
+  background:rgba(0,0,0,.7);
+  color:#fff;
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:6px;
+  z-index:2;
+  pointer-events:none;
 }
 
 /* TABLE */
@@ -292,16 +326,21 @@ async function runSEO() {
     });
     const d = await res.json();
     const cls = i % 2 === 0 ? "domain-a" : "domain-b";
+    const previewId = `preview-${i}`;
 
     container.innerHTML += `
 <div class="domain-card ${cls}">
   <div class="domain-header">
     <h3>${d.url}</h3>
-    <a class="btn" href="${d.url}" target="_blank">Visit Site ↗</a>
+    <div class="domain-actions">
+      <button onclick="togglePreview('${previewId}', '${d.url}', this)">Show Preview</button>
+      <a class="btn" href="${d.url}" target="_blank">Visit Site ↗</a>
+    </div>
   </div>
 
-  <div class="site-preview">
-    <iframe src="${d.url}" loading="lazy"></iframe>
+  <div class="site-preview" id="${previewId}">
+    <div class="preview-label">Site Preview</div>
+    <iframe loading="lazy"></iframe>
   </div>
 
   <table>
@@ -337,6 +376,20 @@ async function runSEO() {
   }
 
   status.textContent = "Done.";
+}
+
+function togglePreview(id, url, btn) {
+  const box = document.getElementById(id);
+  const iframe = box.querySelector("iframe");
+
+  if (box.style.display === "block") {
+    box.style.display = "none";
+    btn.textContent = "Show Preview";
+  } else {
+    box.style.display = "block";
+    if (!iframe.src) iframe.src = url;
+    btn.textContent = "Hide Preview";
+  }
 }
 
 const esc = t => (t||"").replace(/[&<>"']/g,m=>({
