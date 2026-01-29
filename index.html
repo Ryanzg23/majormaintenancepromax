@@ -7,7 +7,7 @@
 <link href="favicon.png" rel="shortcut icon" type="image/x-icon">
 
 <style>
-* { box-sizing: border-box; }
+* { box-sizing:border-box; }
 
 :root {
   --bg:#f5f5f5;
@@ -42,6 +42,10 @@ body {
   max-width:1200px;
   margin:auto;
   padding:16px;
+}
+
+.report-mode .container {
+  max-width:1400px;
 }
 
 header {
@@ -192,8 +196,25 @@ th { background:rgba(0,0,0,.05); }
   word-break:break-word;
 }
 
+/* REPORT GRID */
+.report-grid {
+  display:flex;
+  flex-wrap:wrap;
+  gap:16px;
+}
+.report-grid .domain-card {
+  width:calc(50% - 8px);
+}
+
+/* HIDE BUTTONS IN REPORT */
+.report-mode button,
+.report-mode a.btn {
+  display:none !important;
+}
+
 @media (max-width:900px) {
   .preview { grid-template-columns:1fr; }
+  .report-grid .domain-card { width:100%; }
 }
 </style>
 </head>
@@ -215,9 +236,11 @@ th { background:rgba(0,0,0,.05); }
   <button onclick="scanAll()">SCAN ALL</button>
   <button onclick="cssCheckAll()">CHECK ALL CSS</button>
   <button onclick="runSEO()">GENERATE META + ROBOTS</button>
+  <button id="reportBtn" onclick="openReport()" disabled>OPEN REPORT PAGE</button>
+  <button id="exportBtn" onclick="exportReportHTML()" disabled>EXPORT REPORT (HTML)</button>
 </div>
 
-<div class="status" id="status"></div>
+<div id="status"></div>
 </div>
 
 <div id="results"></div>
@@ -226,63 +249,41 @@ th { background:rgba(0,0,0,.05); }
 
 <script>
 /* ---------- HELPERS ---------- */
-
 const getUrls = () =>
-  document.getElementById("urls").value
-    .split("\n")
-    .map(u => u.trim())
-    .filter(Boolean);
+  document.getElementById("urls").value.split("\n").map(u=>u.trim()).filter(Boolean);
 
-const openWithDelay = (urls, builder, delay = 700) =>
-  urls.forEach((u,i) =>
-    setTimeout(() => window.open(builder(u), "_blank"), i * delay)
-  );
+const openWithDelay = (urls, fn, delay=700) =>
+  urls.forEach((u,i)=>setTimeout(()=>window.open(fn(u),"_blank"),i*delay));
 
 const esc = s =>
-  (s||"").replace(/[&<>"']/g,m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",
-    '"':"&quot;","'":"&#039;"
-  }[m]));
+  (s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 
 /* ---------- BULK TOOLS ---------- */
-
 function ampTestAll(){openWithDelay(getUrls(),u=>`https://search.google.com/test/amp?url=${encodeURIComponent(u)}`)}
 function pageSpeedAll(){openWithDelay(getUrls(),u=>`https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`)}
 function scanAll(){openWithDelay(getUrls(),u=>`https://sitecheck.sucuri.net/results/${encodeURIComponent(u)}`)}
 function cssCheckAll(){openWithDelay(getUrls(),u=>`https://jigsaw.w3.org/css-validator/validator?uri=${encodeURIComponent(u)}`)}
 
 /* ---------- REDIRECT FORMAT ---------- */
-
 function formatRedirect(chain, finalUrl) {
-  const normalize = u =>
-    u.replace(/^https?:\/\//,"").replace(/^www\./,"").split("/")[0];
-
-  if (!chain || chain.length === 0) {
-    return `<strong>${finalUrl}</strong>`;
-  }
-
+  const normalize = u => u.replace(/^https?:\/\//,"").replace(/^www\./,"").split("/")[0];
+  if (!chain || chain.length === 0) return `<strong>${finalUrl}</strong>`;
   const finalDomain = normalize(finalUrl);
-  const sameDomain = chain.every(r => normalize(r.url) === finalDomain);
-
-  if (sameDomain) {
-    return `<strong>${finalUrl}</strong>`;
-  }
-
-  if (chain.length === 1) {
-    return `301 to <strong>${finalUrl}</strong>`;
-  }
-
+  const same = chain.every(r=>normalize(r.url)===finalDomain);
+  if (same) return `<strong>${finalUrl}</strong>`;
+  if (chain.length === 1) return `301 to <strong>${finalUrl}</strong>`;
   return `301 to ${chain.slice(0,-1).map(r=>r.url).join(" → ")} → <strong>${finalUrl}</strong>`;
 }
 
 /* ---------- MAIN ---------- */
-
 async function runSEO() {
   const urls = getUrls();
   const results = document.getElementById("results");
   const status = document.getElementById("status");
 
   results.innerHTML = "";
+  reportBtn.disabled = true;
+  exportBtn.disabled = true;
 
   for (let i=0;i<urls.length;i++) {
     status.textContent = `Processing ${i+1} / ${urls.length}`;
@@ -299,7 +300,10 @@ async function runSEO() {
 <div class="domain-card">
   <div class="domain-header">
     <h3>${esc(d.url)}</h3>
-    <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
+    <div>
+      <button onclick="togglePreview(this)">Hide Preview</button>
+      <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
+    </div>
   </div>
 
   <div class="site-preview">
@@ -329,6 +333,16 @@ async function runSEO() {
   }
 
   status.textContent = "Done.";
+  reportBtn.disabled = false;
+  exportBtn.disabled = false;
+}
+
+/* ---------- TOGGLES ---------- */
+function togglePreview(btn) {
+  const box = btn.closest(".domain-card").querySelector(".site-preview");
+  const hidden = box.style.display === "none";
+  box.style.display = hidden ? "" : "none";
+  btn.textContent = hidden ? "Hide Preview" : "Show Preview";
 }
 
 function toggleTheme() {
@@ -341,6 +355,43 @@ function toggleTheme() {
     body.dataset.theme = "light";
     btn.textContent = "☀️ Light";
   }
+}
+
+/* ---------- REPORT ---------- */
+function buildReportHTML() {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SEO Report</title>
+<link href="favicon.png" rel="shortcut icon" type="image/x-icon">
+${document.querySelector("style").outerHTML}
+</head>
+<body class="report-mode" data-theme="${document.body.dataset.theme}">
+<div class="container">
+  <h2>SEO Report</h2>
+  <div class="report-grid">
+    ${document.getElementById("results").innerHTML}
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+function openReport() {
+  const win = window.open("", "_blank");
+  win.document.write(buildReportHTML());
+  win.document.close();
+}
+
+function exportReportHTML() {
+  const blob = new Blob([buildReportHTML()], { type:"text/html" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `seo-report-${new Date().toISOString().split("T")[0]}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 </script>
 </body>
