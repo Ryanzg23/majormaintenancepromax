@@ -304,10 +304,22 @@ function normalizeDomain(url) {
     .split("/")[0];
 }
 
-function isCrossDomainRedirect(chain, finalUrl) {
-  const finalDomain = normalizeDomain(finalUrl);
-  return chain && chain.some(r => normalizeDomain(r.url) !== finalDomain);
+function isCrossDomainRedirect(chain, finalUrl, originalUrl) {
+  const normalize = u =>
+    u.replace(/^https?:\/\//, "")
+     .replace(/^www\./, "")
+     .split("/")[0];
+
+  const baseDomain = normalize(originalUrl);
+  const finalDomain = normalize(finalUrl);
+
+  // Final domain is different from original
+  if (baseDomain !== finalDomain) return true;
+
+  // Any intermediate redirect is different
+  return chain && chain.some(r => normalize(r.url) !== baseDomain);
 }
+
 
 function formatRedirect(chain, finalUrl) {
   if (!chain || chain.length === 0) {
@@ -476,4 +488,5 @@ function exportReportHTML() {
 </body>
 
 </html>
+
 
