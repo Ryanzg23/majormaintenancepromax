@@ -238,7 +238,9 @@ th { background:rgba(0,0,0,.05); }
   <button onclick="cssCheckAll()">CHECK ALL CSS</button>
   <button onclick="runSEO()">GENERATE META + ROBOTS</button>
   <button id="reportBtn" onclick="openReport()" disabled>OPEN REPORT PAGE</button>
-  <button id="exportBtn" onclick="exportReportHTML()" disabled>EXPORT REPORT (HTML)</button>
+  <button id="exportBtn" onclick="exportReportHTML()" disabled>
+    EXPORT REPORT (HTML)
+  </button>
 </div>
 
 <div class="status" id="status"></div>
@@ -249,16 +251,70 @@ th { background:rgba(0,0,0,.05); }
 </div>
 
 <script>
+/* ---------------- UTILITIES ---------------- */
+
 const getUrls = () =>
-  document.getElementById("urls").value.split("\n").map(u=>u.trim()).filter(Boolean);
+  document.getElementById("urls").value
+    .split("\n")
+    .map(u => u.trim())
+    .filter(Boolean);
 
-const openWithDelay = (urls, builder, delay=700) =>
-  urls.forEach((u,i)=>setTimeout(()=>window.open(builder(u),"_blank"),i*delay));
+const openWithDelay = (urls, builder, delay = 700) =>
+  urls.forEach((u, i) =>
+    setTimeout(() => window.open(builder(u), "_blank"), i * delay)
+  );
 
-function ampTestAll(){openWithDelay(getUrls(),u=>`https://search.google.com/test/amp?url=${encodeURIComponent(u)}`)}
-function pageSpeedAll(){openWithDelay(getUrls(),u=>`https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`)}
-function scanAll(){openWithDelay(getUrls(),u=>`https://sitecheck.sucuri.net/results/${encodeURIComponent(u)}`)}
-function cssCheckAll(){openWithDelay(getUrls(),u=>`https://jigsaw.w3.org/css-validator/validator?uri=${encodeURIComponent(u)}`)}
+const esc = s =>
+  (s || "").replace(/[&<>"']/g, m => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[m]));
+
+/* ---------------- BULK TOOLS ---------------- */
+
+function ampTestAll() {
+  openWithDelay(getUrls(), u =>
+    `https://search.google.com/test/amp?url=${encodeURIComponent(u)}`
+  );
+}
+
+function pageSpeedAll() {
+  openWithDelay(getUrls(), u =>
+    `https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`
+  );
+}
+
+function scanAll() {
+  openWithDelay(getUrls(), u =>
+    `https://sitecheck.sucuri.net/results/${encodeURIComponent(u)}`
+  );
+}
+
+function cssCheckAll() {
+  openWithDelay(getUrls(), u =>
+    `https://jigsaw.w3.org/css-validator/validator?uri=${encodeURIComponent(u)}`
+  );
+}
+
+/* ---------------- REDIRECT FORMATTER ---------------- */
+
+function formatRedirect(chain, finalUrl) {
+  if (!chain || chain.length === 0) {
+    return `<strong>${finalUrl}</strong>`;
+  }
+
+  if (chain.length === 1) {
+    return `301 to <strong>${finalUrl}</strong>`;
+  }
+
+  const middle = chain.slice(0, -1).map(r => r.url).join(" → ");
+  return `301 to ${middle} → <strong>${finalUrl}</strong>`;
+}
+
+/* ---------------- MAIN SEO FUNCTION ---------------- */
 
 async function runSEO() {
   const urls = getUrls();
@@ -269,13 +325,13 @@ async function runSEO() {
   exportBtn.disabled = true;
   results.innerHTML = "";
 
-  for (let i=0;i<urls.length;i++) {
-    status.textContent = `Processing ${i+1} / ${urls.length}`;
+  for (let i = 0; i < urls.length; i++) {
+    status.textContent = `Processing ${i + 1} / ${urls.length}`;
 
     const res = await fetch("/.netlify/functions/seo", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ url: urls[i] })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: urls[i] })
     });
 
     const d = await res.json();
@@ -283,7 +339,7 @@ async function runSEO() {
     results.innerHTML += `
 <div class="domain-card">
   <div class="domain-header">
-    <h3>${d.url}</h3>
+    <h3>${esc(d.url)}</h3>
     <div>
       <button onclick="togglePreview(this)">Hide Preview</button>
       <a class="btn" href="${d.url}" target="_blank">Visit ↗</a>
@@ -292,25 +348,32 @@ async function runSEO() {
 
   <div class="site-preview">
     <div class="preview-label">Site Preview</div>
-    <iframe src="${d.url}"></iframe>
+    <iframe src="${d.finalUrl}"></iframe>
   </div>
 
-<table>
-  <tr><th>Title</th><td>${esc(d.title)}</td></tr>
-  <tr><th>Description</th><td>${esc(d.description)}</td></tr>
-  <tr><th>Canonical</th><td>${d.canonical || "-"}</td></tr>
-  <tr><th>AMP</th><td>${d.amphtml || "-"}</td></tr>
-  <tr><th>Redirect / Final URL</th><td>${esc(d.redirectStatus)}</td></tr>
-</table>
+  <table>
+    <tr><th>Title</th><td>${esc(d.title)}</td></tr>
+    <tr><th>Description</th><td>${esc(d.description)}</td></tr>
+    <tr><th>Canonical</th><td>${d.canonical || "-"}</td></tr>
+    <tr><th>AMP</th><td>${d.amphtml || "-"}</td></tr>
+    <tr>
+      <th>Redirect / Final URL</th>
+      <td>${formatRedirect(d.redirectChain, d.finalUrl)}</td>
+    </tr>
+  </table>
 
   <div class="preview">
     <div>
       <strong>Robots.txt</strong>
-      <div class="code-block">${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}</div>
+      <div class="code-block">
+        ${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}
+      </div>
     </div>
     <div>
       <strong>Sitemap.xml</strong>
-      <div class="code-block">${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}</div>
+      <div class="code-block">
+        ${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}
+      </div>
     </div>
   </div>
 </div>`;
@@ -321,17 +384,23 @@ async function runSEO() {
   exportBtn.disabled = false;
 }
 
+/* ---------------- PREVIEW TOGGLE ---------------- */
+
 function togglePreview(btn) {
   const preview = btn.closest(".domain-card").querySelector(".site-preview");
-  preview.style.display = preview.style.display === "none" ? "" : "none";
-  btn.textContent = preview.style.display === "none" ? "Show Preview" : "Hide Preview";
+  const hidden = preview.style.display === "none";
+  preview.style.display = hidden ? "" : "none";
+  btn.textContent = hidden ? "Hide Preview" : "Show Preview";
 }
+
+/* ---------------- REPORT / EXPORT ---------------- */
 
 function buildReportHTML() {
   const content = document.getElementById("results").innerHTML;
+
   return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>SEO Report</title>
@@ -346,8 +415,7 @@ ${document.querySelector("style").outerHTML}
   </div>
 </div>
 </body>
-</html>
-`;
+</html>`;
 }
 
 function openReport() {
@@ -358,7 +426,7 @@ function openReport() {
 
 function exportReportHTML() {
   const html = buildReportHTML();
-  const blob = new Blob([html], { type:"text/html" });
+  const blob = new Blob([html], { type: "text/html" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `seo-report-${new Date().toISOString().split("T")[0]}.html`;
@@ -366,9 +434,12 @@ function exportReportHTML() {
   URL.revokeObjectURL(a.href);
 }
 
+/* ---------------- THEME ---------------- */
+
 function toggleTheme() {
   const body = document.body;
   const btn = document.getElementById("themeBtn");
+
   if (body.dataset.theme === "light") {
     body.dataset.theme = "dark";
     btn.textContent = "🌙 Dark";
@@ -377,14 +448,9 @@ function toggleTheme() {
     btn.textContent = "☀️ Light";
   }
 }
-
-const esc = s =>
-  (s||"").replace(/[&<>"']/g,m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",
-    '"':"&quot;","'":"&#039;"
-  }[m]));
 </script>
-
+  
 </body>
 </html>
+
 
