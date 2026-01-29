@@ -31,7 +31,9 @@ export async function handler(event) {
     /* ---------- FETCH FINAL PAGE ---------- */
 
     const finalRes = await fetch(finalUrl);
-    const html = await finalRes.text();
+const finalStatus = finalRes.status;
+const html = await finalRes.text();
+
 
     /* ---------- META ---------- */
 
@@ -88,3 +90,4 @@ export async function handler(event) {
     };
   }
 }
+
