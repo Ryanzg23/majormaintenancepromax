@@ -255,123 +255,189 @@ th, td {
 <script>
 /* ---------- HELPERS ---------- */
 const getUrls = () =>
-  document.getElementById("urls").value.split("\n").map(u=>u.trim()).filter(Boolean);
+  document.getElementById("urls").value
+    .split("\n")
+    .map(u => u.trim())
+    .filter(Boolean);
 
-const openWithDelay = (urls, fn, delay=700) =>
-  urls.forEach((u,i)=>setTimeout(()=>window.open(fn(u),"_blank"),i*delay));
+const openWithDelay = (urls, fn, delay = 700) =>
+  urls.forEach((u, i) =>
+    setTimeout(() => window.open(fn(u), "_blank"), i * delay)
+  );
 
 const esc = s =>
-  (s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+  (s || "").replace(/[&<>"']/g, m => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[m]));
 
 /* ---------- BULK TOOLS ---------- */
-function ampTestAll(){openWithDelay(getUrls(),u=>`https://search.google.com/test/amp?url=${encodeURIComponent(u)}`)}
-function pageSpeedAll(){openWithDelay(getUrls(),u=>`https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`)}
-function scanAll(){openWithDelay(getUrls(),u=>`https://sitecheck.sucuri.net/results/${encodeURIComponent(u)}`)}
-function cssCheckAll(){openWithDelay(getUrls(),u=>`https://jigsaw.w3.org/css-validator/validator?uri=${encodeURIComponent(u)}`)}
+function ampTestAll() {
+  openWithDelay(getUrls(), u =>
+    `https://search.google.com/test/amp?url=${encodeURIComponent(u)}`
+  );
+}
+function pageSpeedAll() {
+  openWithDelay(getUrls(), u =>
+    `https://pagespeed.web.dev/report?url=${encodeURIComponent(u)}`
+  );
+}
+function scanAll() {
+  openWithDelay(getUrls(), u =>
+    `https://sitecheck.sucuri.net/results/${encodeURIComponent(u)}`
+  );
+}
+function cssCheckAll() {
+  openWithDelay(getUrls(), u =>
+    `https://jigsaw.w3.org/css-validator/validator?uri=${encodeURIComponent(u)}`
+  );
+}
 
 /* ---------- REDIRECT HELPERS ---------- */
-function normalizeDomain(u){
-  return u.replace(/^https?:\/\//,"").replace(/^www\./,"").split("/")[0];
+function normalizeDomain(url) {
+  return url
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .split("/")[0];
 }
 
-function isCrossDomainRedirect(chain, finalUrl){
+function isCrossDomainRedirect(chain, finalUrl) {
   const finalDomain = normalizeDomain(finalUrl);
-  return chain && chain.some(r=>normalizeDomain(r.url)!==finalDomain);
+  return chain && chain.some(r => normalizeDomain(r.url) !== finalDomain);
 }
 
-function formatRedirect(chain, finalUrl){
-  if (!chain || chain.length===0) return `<strong>${finalUrl}</strong>`;
-  if (!isCrossDomainRedirect(chain, finalUrl)) return `<strong>${finalUrl}</strong>`;
-  if (chain.length===1) return `301 to <strong>${finalUrl}</strong>`;
-  return `301 to ${chain.slice(0,-1).map(r=>r.url).join(" → ")} → <strong>${finalUrl}</strong>`;
+function formatRedirect(chain, finalUrl) {
+  if (!chain || chain.length === 0) {
+    return `<strong>${finalUrl}</strong>`;
+  }
+  if (!isCrossDomainRedirect(chain, finalUrl)) {
+    return `<strong>${finalUrl}</strong>`;
+  }
+  if (chain.length === 1) {
+    return `301 to <strong>${finalUrl}</strong>`;
+  }
+  return `301 to ${chain
+    .slice(0, -1)
+    .map(r => r.url)
+    .join(" → ")} → <strong>${finalUrl}</strong>`;
 }
 
 /* ---------- MAIN ---------- */
-async function runSEO(){
+async function runSEO() {
   const urls = getUrls();
   const results = document.getElementById("results");
   const status = document.getElementById("status");
 
-  results.innerHTML="";
-  reportBtn.disabled=true;
-  exportBtn.disabled=true;
+  results.innerHTML = "";
+  reportBtn.disabled = true;
+  exportBtn.disabled = true;
 
-  for(let i=0;i<urls.length;i++){
-    status.textContent=`Processing ${i+1} / ${urls.length}`;
+  for (let i = 0; i < urls.length; i++) {
+    status.textContent = `Processing ${i + 1} / ${urls.length}`;
 
-    const res = await fetch("/.netlify/functions/seo",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ url: urls[i] })
+    const res = await fetch("/.netlify/functions/seo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: urls[i] })
     });
 
     const d = await res.json();
-    const cross = isCrossDomainRedirect(d.redirectChain,d.finalUrl);
+    const cross = isCrossDomainRedirect(d.redirectChain, d.finalUrl);
 
-    results.innerHTML+=`
+    results.innerHTML += `
 <div class="domain-card">
   <div class="domain-header">
     <h3>${esc(d.url)}</h3>
-    <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
+    ${
+      cross
+        ? `<a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>`
+        : `
+          <div>
+            <button onclick="togglePreview(this)">Hide Preview</button>
+            <a class="btn" href="${d.finalUrl}" target="_blank">Visit ↗</a>
+          </div>
+        `
+    }
   </div>
 
   ${
-    cross ? `
-    <div class="redirect-only">
-      <div class="redirect-status">${formatRedirect(d.redirectChain,d.finalUrl)}</div>
-      <div class="redirect-note">
-        This domain permanently redirects to another domain.
-      </div>
-    </div>
-    ` : `
-    <div class="site-preview">
-      <div class="preview-label">Site Preview</div>
-      <iframe src="${d.finalUrl}"></iframe>
-    </div>
+    cross
+      ? `
+        <div class="redirect-only">
+          <div class="redirect-status">
+            ${formatRedirect(d.redirectChain, d.finalUrl)}
+          </div>
+          <div class="redirect-note">
+            This domain permanently redirects to another domain.
+          </div>
+        </div>
+      `
+      : `
+        <div class="site-preview">
+          <div class="preview-label">Site Preview</div>
+          <iframe src="${d.finalUrl}"></iframe>
+        </div>
 
-    <table>
-      <tr><th>Title</th><td>${esc(d.title)}</td></tr>
-      <tr><th>Description</th><td>${esc(d.description)}</td></tr>
-      <tr><th>Canonical</th><td>${d.canonical||"-"}</td></tr>
-      <tr><th>AMP</th><td>${d.amphtml||"-"}</td></tr>
-      <tr><th>Redirect / Final URL</th><td>${formatRedirect(d.redirectChain,d.finalUrl)}</td></tr>
-    </table>
+        <table>
+          <tr><th>Title</th><td>${esc(d.title)}</td></tr>
+          <tr><th>Description</th><td>${esc(d.description)}</td></tr>
+          <tr><th>Canonical</th><td>${d.canonical || "-"}</td></tr>
+          <tr><th>AMP</th><td>${d.amphtml || "-"}</td></tr>
+          <tr>
+            <th>Redirect / Final URL</th>
+            <td>${formatRedirect(d.redirectChain, d.finalUrl)}</td>
+          </tr>
+        </table>
 
-    <div class="preview">
-      <div>
-        <strong>Robots.txt</strong>
-        <div class="code-block">${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}</div>
-      </div>
-      <div>
-        <strong>Sitemap.xml</strong>
-        <div class="code-block">${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}</div>
-      </div>
-    </div>
-    `
+        <div class="preview">
+          <div>
+            <strong>Robots.txt</strong>
+            <div class="code-block">
+              ${d.robots?.found ? esc(d.robots.content) : "robots.txt not found"}
+            </div>
+          </div>
+          <div>
+            <strong>Sitemap.xml</strong>
+            <div class="code-block">
+              ${d.sitemap?.found ? esc(d.sitemap.content) : "sitemap.xml not found"}
+            </div>
+          </div>
+        </div>
+      `
   }
 </div>`;
   }
 
-  status.textContent="Done.";
-  reportBtn.disabled=false;
-  exportBtn.disabled=false;
+  status.textContent = "Done.";
+  reportBtn.disabled = false;
+  exportBtn.disabled = false;
 }
 
-/* ---------- THEME ---------- */
-function toggleTheme(){
-  const body=document.body;
-  const btn=document.getElementById("themeBtn");
-  if(body.dataset.theme==="light"){
-    body.dataset.theme="dark";
-    btn.textContent="🌙 Dark";
+/* ---------- UI ---------- */
+function togglePreview(btn) {
+  const preview = btn.closest(".domain-card").querySelector(".site-preview");
+  const hidden = preview.style.display === "none";
+  preview.style.display = hidden ? "" : "none";
+  btn.textContent = hidden ? "Hide Preview" : "Show Preview";
+}
+
+function toggleTheme() {
+  const body = document.body;
+  const btn = document.getElementById("themeBtn");
+  if (body.dataset.theme === "light") {
+    body.dataset.theme = "dark";
+    btn.textContent = "🌙 Dark";
   } else {
-    body.dataset.theme="light";
-    btn.textContent="☀️ Light";
+    body.dataset.theme = "light";
+    btn.textContent = "☀️ Light";
   }
 }
 
 /* ---------- REPORT ---------- */
-function buildReportHTML(){
+function buildReportHTML() {
   return `
 <!DOCTYPE html>
 <html>
@@ -392,20 +458,22 @@ ${document.querySelector("style").outerHTML}
 </html>`;
 }
 
-function openReport(){
-  const w=window.open("","_blank");
+function openReport() {
+  const w = window.open("", "_blank");
   w.document.write(buildReportHTML());
   w.document.close();
 }
 
-function exportReportHTML(){
-  const blob=new Blob([buildReportHTML()],{type:"text/html"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`seo-report-${new Date().toISOString().split("T")[0]}.html`;
+function exportReportHTML() {
+  const blob = new Blob([buildReportHTML()], { type: "text/html" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `seo-report-${new Date().toISOString().split("T")[0]}.html`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
 </script>
 </body>
+
 </html>
+
